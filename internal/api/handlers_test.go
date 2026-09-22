@@ -1797,6 +1797,7 @@ func TestHandleCLIRunBackupSubcommandAdmission(t *testing.T) {
 		{"backup verify rejected", []string{"backup", "verify"}, false},
 		{"backup with no subcommand rejected", []string{"backup"}, false},
 		{"backup unknown subcommand rejected", []string{"backup", "restore"}, false},
+		{"import-discord-observations allowed", []string{"import-discord-observations", "/imports/discord/sample.jsonl", "--source", "700"}, true},
 		{"logs still allowed", []string{"logs"}, true},
 		{"gc allowed", []string{"gc", "--yes"}, true},
 		{"import-maildir allowed", []string{"import-maildir", "--identifier", "me@example.test", "dir"}, true},

@@ -30,6 +30,7 @@ var mcpAllowIdentityDecisions bool
 var mcpAllowIdentityScoring bool
 var mcpAllowPersonMerges bool
 var mcpAllowCardDAVWrites bool
+var mcpReadOnly bool
 var serveMCPHTTPWithOptions = mcpserver.ServeHTTPWithOptions
 
 var mcpCmd = &cobra.Command{
@@ -75,6 +76,7 @@ Add to Claude Desktop config:
 		opts.AllowIdentityScoring = mcpAllowIdentityScoring
 		opts.AllowPersonMerges = mcpAllowPersonMerges
 		opts.AllowCardDAVWrites = mcpAllowCardDAVWrites
+		applyMCPReadOnly(&opts, mcpReadOnly)
 
 		if mcpHTTPAddr != "" {
 			normalized, err := normalizeMCPHTTPAddr(
@@ -222,6 +224,16 @@ func (s daemonMCPVisualSearcher) SearchVisualAttachments(ctx context.Context, re
 	})
 }
 
+func applyMCPReadOnly(opts *mcpserver.ServeOptions, readOnly bool) {
+	if opts == nil {
+		return
+	}
+	opts.ReadOnly = readOnly
+	if readOnly {
+		opts.ManifestSaver = nil
+	}
+}
+
 type daemonMCPHybridSearcher struct {
 	client *daemonclient.Client
 }
@@ -345,6 +357,8 @@ func init() {
 			"instead of stdio. Bare port forms (':8080', '8080') bind to "+
 			"loopback only; non-loopback hosts require [server].api_key or "+
 			"--http-allow-insecure.")
+	mcpCmd.Flags().BoolVar(&mcpReadOnly, "read-only", false,
+		"Expose only read/query MCP tools; omit attachment export and deletion staging.")
 	mcpCmd.Flags().BoolVar(&mcpHTTPAllowInsecure, "http-allow-insecure", false,
 		"Allow --http to bind a non-loopback address without [server].api_key. "+
 			"Any configured key still requires bearer authentication. Without a "+

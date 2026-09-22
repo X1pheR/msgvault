@@ -121,6 +121,8 @@ type ServeOptions struct {
 	AllowIdentityScoring bool
 	AllowPersonMerges    bool
 	AllowCardDAVWrites   bool
+	// ReadOnly omits every stateful tool through the shared security catalog.
+	ReadOnly bool
 
 	// HybridEngine is optional. When nil, semantic_search_messages rejects
 	// vector/hybrid searches with a vector_not_enabled error.
@@ -343,6 +345,7 @@ func newMCPServerWithPolicy(
 		identityScoring:     opts.IdentityScoring,
 	}
 
+	allowWrites = allowWrites && !opts.ReadOnly
 	for _, definition := range operationCatalog(opts, h) {
 		if definition.security == toolSecurityWrite && !allowWrites {
 			continue
