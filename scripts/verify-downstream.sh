@@ -63,6 +63,7 @@ docker run --rm \
     CGO_ENABLED=1 go build \
       -tags "fts5 sqlite_vec" \
       -trimpath \
+      -buildvcs=false \
       -o "$build_dir/msgvault" \
       ./cmd/msgvault
 
