@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/kenn-io/msgvault.git",
+  "release": "v0.19.3",
+  "commit": "e90bcdc5eeaeaf387ff68872601d0c382c184a9b",
+  "downstream_repository": "https://github.com/X1pheR/msgvault.git",
+  "downstream_release": "v0.19.3-discord-local.2",
+  "convergence_issue": "https://github.com/kenn-io/msgvault/issues/884"
+}
