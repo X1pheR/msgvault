@@ -4,10 +4,10 @@ set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root"
 
-version=${MSGVAULT_DOWNSTREAM_VERSION:-v0.19.3-discord-local.2}
-image=${MSGVAULT_IMAGE:-ghcr.io/x1pher/msgvault:0.19.3-discord-local.2}
+version=${MSGVAULT_DOWNSTREAM_VERSION:-v0.19.3-x1pher.2}
+image=${MSGVAULT_IMAGE:-ghcr.io/x1pher/msgvault:0.19.3-x1pher.2}
 
-if [[ "$version" != "v0.19.3-discord-local.2" ]]; then
+if [[ "$version" != "v0.19.3-x1pher.2" ]]; then
   echo "unexpected downstream version: $version" >&2
   exit 1
 fi
