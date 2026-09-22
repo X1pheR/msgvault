@@ -8,7 +8,7 @@ This repository is the X1pheR-maintained downstream of `kenn-io/msgvault`.
 - Current upstream baseline: `v0.19.3`
 - Baseline commit: `e90bcdc5eeaeaf387ff68872601d0c382c184a9b`
 - Downstream repository: <https://github.com/X1pheR/msgvault>
-- First downstream release: `v0.19.3-discord-local.2`
+- First downstream release: `v0.19.3-x1pher.2`
 - Upstream convergence issue: <https://github.com/kenn-io/msgvault/issues/884>
 - License: upstream MIT license retained unchanged
 
@@ -31,7 +31,7 @@ It does not add Discord credential acquisition, user-token/selfbot support, nati
 
 Downstream release tags use:
 
-`v<upstream-version>-discord-local.<revision>`
+`v<upstream-version>-x1pher.<revision>`
 
 Rules:
 
@@ -39,9 +39,9 @@ Rules:
 2. A downstream-only change on the same upstream base increments `<revision>`.
 3. Moving to a new upstream release creates a new downstream version on that base after compatibility and regression acceptance.
 4. Accepted release tags are immutable; never rewrite an accepted release to follow upstream.
-5. The initial repository release is `v0.19.3-discord-local.2` so source ownership changes without changing the already accepted runtime version identity.
+5. The initial repository release is `v0.19.3-x1pher.2`; the `x1pher.N` suffix is the maintained downstream release identity, while equivalence to the temporary `v0.19.3-discord-local.2` runtime is proven separately before cutover.
 
-The inherited upstream Docker publication workflow derives its registry from `github.repository`. Versioned downstream images therefore publish under `ghcr.io/x1pher/msgvault`. For `v0.19.3-discord-local.2`, the semver image tag is `ghcr.io/x1pher/msgvault:0.19.3-discord-local.2`. Production consumers must pin an exact downstream version tag. Moving tags such as `latest` are never production selectors; the resolved image digest is release/provenance evidence.
+The inherited upstream Docker publication workflow derives its registry from `github.repository`. Versioned downstream images therefore publish under `ghcr.io/x1pher/msgvault`. For `v0.19.3-x1pher.2`, the semver image tag is `ghcr.io/x1pher/msgvault:0.19.3-x1pher.2`. Production consumers must pin an exact downstream version tag. Moving tags such as `latest` are never production selectors; the resolved image digest is release/provenance evidence.
 
 ## Local verification
 

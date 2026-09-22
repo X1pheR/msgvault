@@ -2,7 +2,7 @@
 
 This repository is a maintained downstream of [kenn-io/msgvault](https://github.com/kenn-io/msgvault). It retains the upstream product, history, license, build system, and provider implementations while carrying a small source-level delta that is not yet available upstream.
 
-The current downstream baseline is upstream `v0.19.3` at `e90bcdc5eeaeaf387ff68872601d0c382c184a9b`. The first maintained downstream release is `v0.19.3-discord-local.2`, intentionally preserving the version identity of the already accepted downstream runtime.
+The current downstream baseline is upstream `v0.19.3` at `e90bcdc5eeaeaf387ff68872601d0c382c184a9b`. The first maintained downstream release is `v0.19.3-x1pher.2`. The temporary pre-repository production image remains `v0.19.3-discord-local.2` until cutover; release acceptance requires equivalent downstream behavior before replacing it.
 
 The downstream exists to provide a bounded local/offline Discord observation import path, keep those observations isolated under `source_type=discord_local` while preserving Discord message semantics, expose an explicit read-only MCP mode, and admit the observation importer through the daemon's bounded CLI runner. It adds no Discord credential acquisition, user-token/selfbot support, history-completeness cursor, second archive database, or new network ingest service.
 
