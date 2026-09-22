@@ -18,6 +18,7 @@ var mcpForceSQL bool
 var mcpNoSQLiteScanner bool
 var mcpHTTPAddr string
 var mcpHTTPAllowInsecure bool
+var mcpReadOnly bool
 var serveMCPHTTPWithOptions = mcpserver.ServeHTTPWithOptions
 
 var mcpCmd = &cobra.Command{
@@ -56,6 +57,7 @@ Add to Claude Desktop config:
 		if err != nil {
 			return err
 		}
+		applyMCPReadOnly(&opts, mcpReadOnly)
 
 		if mcpHTTPAddr != "" {
 			normalized, err := normalizeMCPHTTPAddr(
@@ -90,6 +92,16 @@ func daemonMCPServeOptions(ctx context.Context, st *daemonclient.Client) (mcpser
 		opts.SimilarSearcher = daemonMCPSimilarSearcher{client: st}
 	}
 	return opts, nil
+}
+
+func applyMCPReadOnly(opts *mcpserver.ServeOptions, readOnly bool) {
+	if opts == nil {
+		return
+	}
+	opts.ReadOnly = readOnly
+	if readOnly {
+		opts.ManifestSaver = nil
+	}
 }
 
 type daemonMCPHybridSearcher struct {
@@ -207,6 +219,8 @@ func init() {
 			"instead of stdio. Bare port forms (':8080', '8080') bind to "+
 			"loopback only; non-loopback hosts require [server].api_key or "+
 			"--http-allow-insecure.")
+	mcpCmd.Flags().BoolVar(&mcpReadOnly, "read-only", false,
+		"Expose only read/query MCP tools; omit attachment export and deletion staging.")
 	mcpCmd.Flags().BoolVar(&mcpHTTPAllowInsecure, "http-allow-insecure", false,
 		"Allow --http to bind a non-loopback address without [server].api_key. "+
 			"Any configured key still requires bearer authentication. Without a "+

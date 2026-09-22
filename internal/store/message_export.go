@@ -484,10 +484,14 @@ func messageExportInClause[T any](column string, values []T) (string, []any) {
 	return column + " IN (" + strings.Join(placeholders, ", ") + ")", args
 }
 
+func isDiscordContentSourceType(sourceType string) bool {
+	return sourceType == "discord" || sourceType == "discord_local"
+}
+
 func normalizeMessageExportConversation(
 	sourceType, rawType, rawMetadata string,
 ) (MessageExportConversationType, *string, error) {
-	if sourceType == "discord" {
+	if isDiscordContentSourceType(sourceType) {
 		var metadata messageExportConversationMetadata
 		if err := json.Unmarshal([]byte(rawMetadata), &metadata); err != nil {
 			return "", nil, fmt.Errorf("decode metadata: %w", err)
@@ -527,7 +531,7 @@ func normalizeMessageExportAuthor(
 	row messageExportMessageRow,
 ) (*MessageExportAuthor, error) {
 	displayName := strings.TrimSpace(row.recipientDisplayName)
-	if row.sourceType == "discord" && displayName == "" {
+	if isDiscordContentSourceType(row.sourceType) && displayName == "" {
 		var metadata messageExportMessageMetadata
 		if err := json.Unmarshal([]byte(row.metadata), &metadata); err != nil {
 			return nil, fmt.Errorf("decode metadata: %w", err)

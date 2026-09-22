@@ -84,6 +84,7 @@ type ServeOptions struct {
 	AttachmentsDir   string
 	AttachmentReader AttachmentReader
 	ManifestSaver    DeletionManifestSaver
+	ReadOnly         bool
 	HybridSearcher   HybridSearcher
 	SimilarSearcher  SimilarSearcher
 	DataDir          string
@@ -138,11 +139,15 @@ func newMCPServer(opts ServeOptions) *server.MCPServer {
 	s.AddTool(getMessageTool(), h.getMessage)
 	s.AddTool(getAttachmentTool(), h.getAttachment)
 	s.AddTool(searchInMessageTool(vectorInMessageAvailable), h.searchInMessage)
-	s.AddTool(exportAttachmentTool(), h.exportAttachment)
+	if !opts.ReadOnly {
+		s.AddTool(exportAttachmentTool(), h.exportAttachment)
+	}
 	s.AddTool(listMessagesTool(), h.listMessages)
 	s.AddTool(getStatsTool(), h.getStats)
 	s.AddTool(aggregateTool(), h.aggregate)
-	s.AddTool(stageDeletionTool(), h.stageDeletion)
+	if !opts.ReadOnly {
+		s.AddTool(stageDeletionTool(), h.stageDeletion)
+	}
 	s.AddTool(searchByDomainsTool(), h.searchByDomains)
 	if opts.Backend != nil || opts.SimilarSearcher != nil {
 		s.AddTool(findSimilarMessagesTool(), h.findSimilarMessages)
