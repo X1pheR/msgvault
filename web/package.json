@@ -16,7 +16,7 @@
   "dependencies": {
     "@kenn-io/kit-ui": "github:kenn-io/kit-ui#1e9dc7d45525a471040b72b894432c4956542c38",
     "@tanstack/svelte-virtual": "3.13.32",
-    "dompurify": "3.4.11",
+    "dompurify": "3.4.13",
     "openapi-fetch": "0.17.0",
     "pdfjs-dist": "5.4.296"
   },
