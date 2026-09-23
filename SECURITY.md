@@ -4,10 +4,11 @@
 
 If you discover a security vulnerability in msgvault, please report it responsibly:
 
-1. **Do NOT open a public GitHub issue**
-2. Email the maintainer directly or use GitHub's private vulnerability reporting feature
-3. Include steps to reproduce, impact assessment, and any suggested fixes
-4. Allow reasonable time for a fix before public disclosure
+1. **Do not open a public GitHub issue containing vulnerability details.**
+2. Use GitHub's private vulnerability reporting feature for this repository.
+3. If private vulnerability reporting is unavailable, open a public issue titled `Security contact request` without vulnerability details; the maintainer will provide a private channel.
+4. Include steps to reproduce, impact assessment, and any suggested fixes in the private report.
+5. Allow reasonable time for a fix before public disclosure.
 
 ## Threat Model
 
