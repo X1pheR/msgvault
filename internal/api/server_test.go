@@ -1262,7 +1262,7 @@ func TestCLIRequestDurationPolicy(t *testing.T) {
 func TestTimeoutMiddlewareMarkedRequestPreservesCallerCancellation(t *testing.T) {
 	require := require.New(t)
 	srv := NewServerWithOptions(ServerOptions{
-		Config:         &config.Config{Server: config.ServerConfig{APIPort: 8080}},
+		Config:         &config.Config{Server: config.ServerConfig{APIPort: 8080, APIKey: cliTimeoutTestAPIKey}},
 		Logger:         testLogger(),
 		RequestTimeout: 5 * time.Millisecond,
 	})
@@ -1278,6 +1278,7 @@ func TestTimeoutMiddlewareMarkedRequestPreservesCallerCancellation(t *testing.T)
 	ctx, cancel := context.WithCancel(context.Background())
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/cli/stats", nil).WithContext(ctx)
 	req.Header.Set(apiprotocol.ClientClassHeader, apiprotocol.ClientClassCLI)
+	req.Header.Set("Authorization", "Bearer "+cliTimeoutTestAPIKey)
 	requestDone := make(chan struct{})
 	go func() {
 		handler.ServeHTTP(httptest.NewRecorder(), req)

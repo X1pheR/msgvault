@@ -7,12 +7,13 @@ import (
 )
 
 func TestSDDDLE009ReadOnlyServeOptionsOmitStatefulTools(t *testing.T) {
+	assert := assert.New(t)
 	tools := newMCPServer(ServeOptions{ReadOnly: true}).ListTools()
 
-	assert.Contains(t, tools, ToolSearchMetadata)
-	assert.Contains(t, tools, ToolGetMessage)
-	assert.Contains(t, tools, ToolListMessages)
+	assert.Contains(tools, ToolSearchMetadata)
+	assert.Contains(tools, ToolGetMessage)
+	assert.Contains(tools, ToolListMessages)
 
-	assert.NotContains(t, tools, ToolExportAttachment)
-	assert.NotContains(t, tools, ToolStageDeletion)
+	assert.NotContains(tools, ToolExportAttachment)
+	assert.NotContains(tools, ToolStageDeletion)
 }
