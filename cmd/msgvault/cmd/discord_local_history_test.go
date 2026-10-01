@@ -61,7 +61,7 @@ func TestSDDDLE019ReadOnlyHistoryConsumer(t *testing.T) {
 	// A true read-only consumer leaves no sync run or history mutation.
 	check, err := store.OpenReadOnly(filepath.Join(dir, "msgvault.db"))
 	require.NoError(err)
-	defer check.Close()
+	defer func() { require.NoError(check.Close()) }()
 	var count int
 	require.NoError(check.DB().QueryRow("SELECT COUNT(*) FROM discord_local_versions").Scan(&count))
 	assert.Equal(1, count)

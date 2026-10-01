@@ -83,7 +83,7 @@ func (s *Store) DiscordLocalVersions(sourceID int64, messageID string) ([]Discor
 	if err != nil {
 		return nil, fmt.Errorf("read local Discord history: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []DiscordLocalVersion{}
 	for rows.Next() {
 		var v DiscordLocalVersion
