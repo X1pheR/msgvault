@@ -1,0 +1,12 @@
+misconfigurations:
+  - id: AVD-DS-0002
+    paths:
+      - docs/screenshots/Dockerfile
+    expired_at: 2027-03-31
+    statement: >-
+      Maintained downstream owns this scoped disposition. This inherited image is
+      an optional, manually invoked screenshot-development tool, not a release
+      image or production workload. The production Dockerfile has a non-root
+      runtime USER, and no screenshot container, network endpoint or privileged
+      mount is deployed by this release. Reassess before using that optional
+      screenshot image operationally or before expiry.
