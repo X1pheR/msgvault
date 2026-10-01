@@ -52,10 +52,11 @@ jobs:
         working-directory: docs
         run: uv sync --frozen --no-dev
 
-      - name: Fetch upstream fixture and documentation asset branches
+      - name: Fetch locked upstream fixture, reviewed downstream references and generated assets
         run: |
           git fetch --no-tags https://github.com/kenn-io/msgvault.git +refs/heads/docs-fixtures:refs/remotes/upstream/docs-fixtures
-          git fetch --no-tags --depth=1 https://github.com/kenn-io/msgvault.git +60b0a07ee9c0b8fc4341b41a3a60c65a731e31c4:refs/heads/docs-assets +dedad6fe03b2b6d533011e970921ab303a951c80:refs/heads/docs-generated-assets
+          git fetch --no-tags --depth=1 https://github.com/X1pheR/msgvault.git +6d0370369be1d4508f8b94fac3073113a0aa29e5:refs/heads/docs-assets
+          git fetch --no-tags --depth=1 https://github.com/kenn-io/msgvault.git +dedad6fe03b2b6d533011e970921ab303a951c80:refs/heads/docs-generated-assets
 
       - name: Install frontend dependencies
         working-directory: web
@@ -114,10 +115,11 @@ jobs:
         working-directory: docs
         run: uv sync --frozen --no-dev
 
-      - name: Fetch upstream fixture and documentation asset branches
+      - name: Fetch locked upstream fixture, reviewed downstream references and generated assets
         run: |
           git fetch --no-tags https://github.com/kenn-io/msgvault.git +refs/heads/docs-fixtures:refs/remotes/upstream/docs-fixtures
-          git fetch --no-tags --depth=1 https://github.com/kenn-io/msgvault.git +60b0a07ee9c0b8fc4341b41a3a60c65a731e31c4:refs/heads/docs-assets +dedad6fe03b2b6d533011e970921ab303a951c80:refs/heads/docs-generated-assets
+          git fetch --no-tags --depth=1 https://github.com/X1pheR/msgvault.git +6d0370369be1d4508f8b94fac3073113a0aa29e5:refs/heads/docs-assets
+          git fetch --no-tags --depth=1 https://github.com/kenn-io/msgvault.git +dedad6fe03b2b6d533011e970921ab303a951c80:refs/heads/docs-generated-assets
 
       - name: Install frontend dependencies
         working-directory: web

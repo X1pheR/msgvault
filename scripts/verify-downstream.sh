@@ -10,6 +10,7 @@ docker volume create "$mod_cache" >/dev/null
 docker volume create "$build_cache" >/dev/null
 
 docker run --rm \
+  --cpus=2 --memory=2g --memory-swap=2g --pids-limit=128 --env GOMAXPROCS=2 \
   --mount "type=bind,src=$root,dst=/src,readonly" \
   --mount "type=volume,src=$mod_cache,dst=/go/pkg/mod" \
   --mount "type=volume,src=$build_cache,dst=/root/.cache/go-build" \
@@ -28,6 +29,8 @@ docker run --rm \
       cmd/msgvault/cmd/mcp_read_only_test.go
       internal/api/cli_handlers.go
       internal/api/handlers_test.go
+      internal/discord/mapping.go
+      internal/discord/observation_recovery_test.go
       internal/discord/observation_import.go
       internal/discord/observation_import_test.go
       internal/mcp/discord_local_read_only_test.go
