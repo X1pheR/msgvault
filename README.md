@@ -14,7 +14,7 @@ See [DOWNSTREAM.md](DOWNSTREAM.md) for exact provenance, versioning, verificatio
 
 ## Downstream image
 
-The lifecycle candidate targets downstream release `v0.19.3-x1pher.4`; publication and deployment acceptance are separate gates.
+The lifecycle candidate targets downstream release `v0.19.3-x1pher.5`; publication and deployment acceptance are separate gates.
 
 ```bash
 docker run --rm ghcr.io/x1pher/msgvault:0.19.3-x1pher.3 version

@@ -42,7 +42,7 @@ jobs:
         run: uv sync --frozen --no-dev
 
       - name: Fetch the pinned fixture branch
-        run: git fetch --no-tags origin +refs/heads/docs-fixtures:refs/remotes/origin/docs-fixtures
+        run: git fetch --no-tags https://github.com/kenn-io/msgvault.git +refs/heads/docs-fixtures:refs/remotes/upstream/docs-fixtures
 
       - name: Install frontend dependencies
         working-directory: web
@@ -93,7 +93,7 @@ jobs:
         run: uv sync --frozen --no-dev
 
       - name: Fetch the pinned fixture branch
-        run: git fetch --no-tags origin +refs/heads/docs-fixtures:refs/remotes/origin/docs-fixtures
+        run: git fetch --no-tags https://github.com/kenn-io/msgvault.git +refs/heads/docs-fixtures:refs/remotes/upstream/docs-fixtures
 
       - name: Install frontend dependencies
         working-directory: web
