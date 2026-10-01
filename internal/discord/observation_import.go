@@ -293,7 +293,7 @@ func validateObservationChannelSource(scope observationSourceScope, channel *Cha
 	case "account":
 		if channel.GuildID != "" {
 			return fmt.Errorf(
-				"Discord local account-scoped source account:%s cannot import guild %s channel %s",
+				"discord local account-scoped source account:%s cannot import guild %s channel %s",
 				scope.id,
 				channel.GuildID,
 				channel.ID,
@@ -301,7 +301,7 @@ func validateObservationChannelSource(scope observationSourceScope, channel *Cha
 		}
 		if channel.Type != channelTypeDM && channel.Type != channelTypeGroupDM {
 			return fmt.Errorf(
-				"Discord local account-scoped source account:%s requires DM or group-DM channel, got type %d",
+				"discord local account-scoped source account:%s requires DM or group-DM channel, got type %d",
 				scope.id,
 				channel.Type,
 			)
