@@ -15,29 +15,32 @@ import (
 )
 
 func TestSDDDLE019ReadOnlyHistoryCommandExists(t *testing.T) {
+	assert := assert.New(t)
 	found := false
 	for _, command := range rootCmd.Commands() {
 		if command.Name() == "discord-message-history" {
 			found = true
 		}
 	}
-	assert.True(t, found)
+	assert.True(found)
 }
 
 func TestSDDDLE019ReadOnlyHistoryConsumer(t *testing.T) {
+	require := require.New(t)
+	assert := assert.New(t)
 	dir := t.TempDir()
 	st, err := store.Open(filepath.Join(dir, "msgvault.db"))
-	require.NoError(t, err)
-	require.NoError(t, st.InitSchema())
+	require.NoError(err)
+	require.NoError(st.InitSchema())
 	message := discord.Message{ID: "900", ChannelID: "800", GuildID: "700", Content: "synthetic observed version",
 		Author: discord.User{ID: "600", Username: "synthetic"}, Timestamp: time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)}
 	channel := discord.Channel{ID: "800", GuildID: "700", Type: 0, Name: "synthetic"}
 	observation := discord.Observation{Version: 1, Kind: discord.ObservationKindMessage, SourceType: "discord_local", SourceIdentifier: "700", Channel: &channel, Message: &message}
 	var input bytes.Buffer
-	require.NoError(t, json.NewEncoder(&input).Encode(observation))
+	require.NoError(json.NewEncoder(&input).Encode(observation))
 	_, err = discord.NewImporter(st, nil).ImportObservations(t.Context(), discord.ObservationImportOptions{SourceIdentifier: "700", Reader: &input})
-	require.NoError(t, err)
-	require.NoError(t, st.Close())
+	require.NoError(err)
+	require.NoError(st.Close())
 	originalConfig := cfg
 	cfg = &config.Config{Data: config.DataConfig{DataDir: dir}}
 	t.Cleanup(func() { cfg = originalConfig })
@@ -50,18 +53,18 @@ func TestSDDDLE019ReadOnlyHistoryConsumer(t *testing.T) {
 		command := newDiscordLocalHistoryCmd()
 		var output bytes.Buffer
 		command.SetOut(&output)
-		require.NoError(t, command.RunE(command, []string{tc.source, tc.message}))
+		require.NoError(command.RunE(command, []string{tc.source, tc.message}))
 		var versions []store.DiscordLocalVersion
-		require.NoError(t, json.Unmarshal(output.Bytes(), &versions))
-		require.Len(t, versions, tc.count)
+		require.NoError(json.Unmarshal(output.Bytes(), &versions))
+		require.Len(versions, tc.count)
 	}
 	// A true read-only consumer leaves no sync run or history mutation.
 	check, err := store.OpenReadOnly(filepath.Join(dir, "msgvault.db"))
-	require.NoError(t, err)
+	require.NoError(err)
 	defer check.Close()
 	var count int
-	require.NoError(t, check.DB().QueryRow("SELECT COUNT(*) FROM discord_local_versions").Scan(&count))
-	assert.Equal(t, 1, count)
+	require.NoError(check.DB().QueryRow("SELECT COUNT(*) FROM discord_local_versions").Scan(&count))
+	assert.Equal(1, count)
 	_, err = check.DB().Exec("DELETE FROM discord_local_versions")
-	require.Error(t, err)
+	require.Error(err)
 }

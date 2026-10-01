@@ -3,7 +3,8 @@ name: Documentation fixture evidence
 permissions:
   contents: read
 
-# Assets are maintained by the explicit upstream, not by this downstream.
+# Upstream owns these assets. Pin the original static evidence before its
+# September refresh for 0.20, retaining this downstream's v0.19.3 baseline.
 env:
   MSGVAULT_DOCS_USE_LOCAL_ASSET_BRANCHES: "true"
 
@@ -48,7 +49,7 @@ jobs:
       - name: Fetch upstream fixture and documentation asset branches
         run: |
           git fetch --no-tags https://github.com/kenn-io/msgvault.git +refs/heads/docs-fixtures:refs/remotes/upstream/docs-fixtures
-          git fetch --no-tags --depth=1 https://github.com/kenn-io/msgvault.git +refs/heads/docs-assets:refs/heads/docs-assets +refs/heads/docs-generated-assets:refs/heads/docs-generated-assets
+          git fetch --no-tags --depth=1 https://github.com/kenn-io/msgvault.git +60b0a07ee9c0b8fc4341b41a3a60c65a731e31c4:refs/heads/docs-assets +dedad6fe03b2b6d533011e970921ab303a951c80:refs/heads/docs-generated-assets
 
       - name: Install frontend dependencies
         working-directory: web
@@ -101,7 +102,7 @@ jobs:
       - name: Fetch upstream fixture and documentation asset branches
         run: |
           git fetch --no-tags https://github.com/kenn-io/msgvault.git +refs/heads/docs-fixtures:refs/remotes/upstream/docs-fixtures
-          git fetch --no-tags --depth=1 https://github.com/kenn-io/msgvault.git +refs/heads/docs-assets:refs/heads/docs-assets +refs/heads/docs-generated-assets:refs/heads/docs-generated-assets
+          git fetch --no-tags --depth=1 https://github.com/kenn-io/msgvault.git +60b0a07ee9c0b8fc4341b41a3a60c65a731e31c4:refs/heads/docs-assets +dedad6fe03b2b6d533011e970921ab303a951c80:refs/heads/docs-generated-assets
 
       - name: Install frontend dependencies
         working-directory: web
