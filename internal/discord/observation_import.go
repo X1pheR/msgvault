@@ -114,28 +114,28 @@ func (imp *Importer) ImportObservations(
 		}
 		if observation.Version != ObservationFormatVersion {
 			return summary, fmt.Errorf(
-				"Discord observation line %d: unsupported version %d",
+				"discord observation line %d: unsupported version %d",
 				line,
 				observation.Version,
 			)
 		}
 		if err := validateObservationEnvelopeSource(opts.SourceIdentifier, observation); err != nil {
-			return summary, fmt.Errorf("Discord observation line %d: %w", line, err)
+			return summary, fmt.Errorf("discord observation line %d: %w", line, err)
 		}
 
 		switch observation.Kind {
 		case ObservationKindContainer:
 			if observation.Channel == nil {
 				return summary, fmt.Errorf(
-					"Discord observation line %d: container requires channel",
+					"discord observation line %d: container requires channel",
 					line,
 				)
 			}
 			if err := validateObservationChannelSource(sourceScope, observation.Channel); err != nil {
-				return summary, fmt.Errorf("Discord observation line %d: %w", line, err)
+				return summary, fmt.Errorf("discord observation line %d: %w", line, err)
 			}
 			if _, err := imp.ensureObservedConversation(source.ID, observation.Channel); err != nil {
-				return summary, fmt.Errorf("Discord observation line %d: %w", line, err)
+				return summary, fmt.Errorf("discord observation line %d: %w", line, err)
 			}
 			if _, known := seenContainers[observation.Channel.ID]; !known {
 				seenContainers[observation.Channel.ID] = struct{}{}
@@ -145,12 +145,12 @@ func (imp *Importer) ImportObservations(
 		case ObservationKindMessage:
 			if observation.Channel == nil || observation.Message == nil {
 				return summary, fmt.Errorf(
-					"Discord observation line %d: message requires channel and message",
+					"discord observation line %d: message requires channel and message",
 					line,
 				)
 			}
 			if err := validateObservationChannelSource(sourceScope, observation.Channel); err != nil {
-				return summary, fmt.Errorf("Discord observation line %d: %w", line, err)
+				return summary, fmt.Errorf("discord observation line %d: %w", line, err)
 			}
 			if err := imp.importObservedMessage(
 				ctx,
@@ -159,7 +159,7 @@ func (imp *Importer) ImportObservations(
 				observation.Message,
 				summary,
 			); err != nil {
-				return summary, fmt.Errorf("Discord observation line %d: %w", line, err)
+				return summary, fmt.Errorf("discord observation line %d: %w", line, err)
 			}
 			if _, known := seenContainers[observation.Channel.ID]; !known {
 				seenContainers[observation.Channel.ID] = struct{}{}
@@ -169,13 +169,13 @@ func (imp *Importer) ImportObservations(
 		case ObservationKindDelete:
 			if observation.MessageID == "" {
 				return summary, fmt.Errorf(
-					"Discord observation line %d: delete requires message_id",
+					"discord observation line %d: delete requires message_id",
 					line,
 				)
 			}
 			if _, err := ParseSnowflake(observation.MessageID); err != nil {
 				return summary, fmt.Errorf(
-					"Discord observation line %d: invalid delete message_id: %w",
+					"discord observation line %d: invalid delete message_id: %w",
 					line,
 					err,
 				)
@@ -190,7 +190,7 @@ func (imp *Importer) ImportObservations(
 
 		default:
 			return summary, fmt.Errorf(
-				"Discord observation line %d: unsupported kind %q",
+				"discord observation line %d: unsupported kind %q",
 				line,
 				observation.Kind,
 			)
@@ -211,11 +211,11 @@ func (imp *Importer) ImportObservations(
 
 func validateObservationEnvelopeSource(importIdentifier string, observation Observation) error {
 	if strings.TrimSpace(observation.SourceType) == "" || strings.TrimSpace(observation.SourceIdentifier) == "" {
-		return errors.New("Discord observation source identity is required")
+		return errors.New("discord observation source identity is required")
 	}
 	if observation.SourceType != sourceTypeDiscordLocal {
 		return fmt.Errorf(
-			"Discord observation source_type %q is invalid; expected %q",
+			"discord observation source_type %q is invalid; expected %q",
 			observation.SourceType,
 			sourceTypeDiscordLocal,
 		)
@@ -225,7 +225,7 @@ func validateObservationEnvelopeSource(importIdentifier string, observation Obse
 	}
 	if observation.SourceIdentifier != importIdentifier {
 		return fmt.Errorf(
-			"Discord observation source %q does not match import source %q",
+			"discord observation source %q does not match import source %q",
 			observation.SourceIdentifier,
 			importIdentifier,
 		)
@@ -240,8 +240,7 @@ type observationSourceScope struct {
 
 func parseObservationSourceIdentifier(identifier string) (observationSourceScope, error) {
 	identifier = strings.TrimSpace(identifier)
-	if strings.HasPrefix(identifier, "account:") {
-		userID := strings.TrimPrefix(identifier, "account:")
+	if userID, ok := strings.CutPrefix(identifier, "account:"); ok {
 		if _, err := ParseSnowflake(userID); err != nil {
 			return observationSourceScope{}, fmt.Errorf(
 				"invalid Discord local source identifier %q: account ID must be a Discord snowflake",
@@ -269,14 +268,14 @@ func validateObservationChannelSource(scope observationSourceScope, channel *Cha
 	case "guild":
 		if channel.GuildID == "" {
 			return fmt.Errorf(
-				"Discord local source %s is guild-scoped but channel %s has no guild ID",
+				"discord local source %s is guild-scoped but channel %s has no guild ID",
 				scope.id,
 				channel.ID,
 			)
 		}
 		if channel.GuildID != scope.id {
 			return fmt.Errorf(
-				"Discord local source %s does not match guild %s for channel %s",
+				"discord local source %s does not match guild %s for channel %s",
 				scope.id,
 				channel.GuildID,
 				channel.ID,
@@ -284,7 +283,7 @@ func validateObservationChannelSource(scope observationSourceScope, channel *Cha
 		}
 		if channel.Type == channelTypeDM || channel.Type == channelTypeGroupDM {
 			return fmt.Errorf(
-				"Discord local guild source %s cannot import DM channel %s",
+				"discord local guild source %s cannot import DM channel %s",
 				scope.id,
 				channel.ID,
 			)
@@ -417,8 +416,8 @@ func observedConversationType(channelType int) string {
 	case channelTypeGroupDM:
 		return "group_chat"
 	case channelTypeAnnouncementThread, channelTypePublicThread, channelTypePrivateThread:
-		return "thread"
+		return discordThreadConversationType
 	default:
-		return "channel"
+		return discordConversationType
 	}
 }

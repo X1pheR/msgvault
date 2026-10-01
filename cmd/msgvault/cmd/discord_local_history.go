@@ -19,7 +19,7 @@ func newDiscordLocalHistoryCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("open local archive: %w", err)
 			}
-			defer st.Close()
+			defer func() { _ = st.Close() }()
 			versions, err := st.DiscordLocalVersionsByIdentifier(args[0], args[1])
 			if err != nil {
 				return err

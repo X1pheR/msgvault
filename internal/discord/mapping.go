@@ -16,10 +16,11 @@ import (
 )
 
 const (
-	discordConversationType = "channel"
-	discordMessageType      = "discord"
-	discordRawFormat        = "discord_json"
-	discordVoiceMessageFlag = 1 << 13
+	discordConversationType       = "channel"
+	discordMessageType            = "discord"
+	discordRawFormat              = "discord_json"
+	discordVoiceMessageFlag       = 1 << 13
+	discordThreadConversationType = "thread"
 )
 
 type mappedConversation struct {

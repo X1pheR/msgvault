@@ -3,8 +3,9 @@ name: Documentation fixture evidence
 permissions:
   contents: read
 
-# Upstream owns these assets. Pin the original static evidence before its
-# September refresh for 0.20, retaining this downstream's v0.19.3 baseline.
+# Upstream static screenshots postdate the retained v0.19.3 UI. Normal runs
+# compare strictly against reviewed downstream captures; reference capture is
+# an explicit dispatch-only operation and does not constitute comparison acceptance.
 env:
   MSGVAULT_DOCS_USE_LOCAL_ASSET_BRANCHES: "true"
 
@@ -13,6 +14,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      capture_reference:
+        description: Capture images for visual review before publishing a reference
+        type: boolean
+        default: false
 
 jobs:
   docs-fixtures:
@@ -65,7 +71,16 @@ jobs:
         env:
           MSGVAULT_DOCS_SCREENSHOT_OUTPUT_DIR: ${{ runner.temp }}/docs-fixture-captures
           MSGVAULT_DOCS_SCREENSHOT_COMPARE_DIR: ${{ github.workspace }}/docs/assets/static
-        run: MSGVAULT_DOCS_SCREENSHOT_PLATFORM=linux make docs-web-screenshots
+        run: |
+          if [[ "${{ inputs.capture_reference }}" == "true" ]]; then unset MSGVAULT_DOCS_SCREENSHOT_COMPARE_DIR; fi
+          MSGVAULT_DOCS_SCREENSHOT_PLATFORM=linux make docs-web-screenshots
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: inputs.capture_reference
+        with:
+          name: docs-reference-linux
+          path: ${{ runner.temp }}/docs-fixture-captures/*.png
+          if-no-files-found: error
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
@@ -122,4 +137,13 @@ jobs:
         env:
           MSGVAULT_DOCS_SCREENSHOT_OUTPUT_DIR: ${{ runner.temp }}/docs-fixture-captures
           MSGVAULT_DOCS_SCREENSHOT_COMPARE_DIR: ${{ github.workspace }}/docs/assets/static
-        run: MSGVAULT_DOCS_SCREENSHOT_PLATFORM=darwin make docs-web-screenshots
+        run: |
+          if [[ "${{ inputs.capture_reference }}" == "true" ]]; then unset MSGVAULT_DOCS_SCREENSHOT_COMPARE_DIR; fi
+          MSGVAULT_DOCS_SCREENSHOT_PLATFORM=darwin make docs-web-screenshots
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: inputs.capture_reference
+        with:
+          name: docs-reference-darwin
+          path: ${{ runner.temp }}/docs-fixture-captures/*.png
+          if-no-files-found: error

@@ -25,7 +25,7 @@ func TestSDDDLE022PassiveArchiveRecovery(t *testing.T) {
 	require.NoError(st.BackupDatabaseContext(t.Context(), dst))
 	restored, err := store.OpenReadOnly(dst)
 	require.NoError(err)
-	defer restored.Close()
+	defer func() { require.NoError(restored.Close()) }()
 	var integrity string
 	require.NoError(restored.DB().QueryRow("PRAGMA integrity_check").Scan(&integrity))
 	require.Equal("ok", integrity)
