@@ -142,7 +142,7 @@ func TestBuildStreamsRelationshipActivityUnderLowMemory(t *testing.T) {
 		messageType:      "email",
 		conversationType: "email_thread",
 	})
-	requirements.NoError(setRelationshipTestMemoryLimit(db, "192MB"))
+	requirements.NoError(setRelationshipTestMemoryLimit(db, "96MB"))
 
 	result, err := Build(context.Background(), db, BuildOptions{
 		Mode:           ModeFull,
