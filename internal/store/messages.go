@@ -70,17 +70,18 @@ type ParticipantPersistData struct {
 // MessagePersistData bundles everything needed to atomically
 // persist a message and its related rows in a single transaction.
 type MessagePersistData struct {
-	Message        *Message
-	Conversation   *ConversationPersistData
-	Metadata       *sql.NullString
-	BodyText       sql.NullString
-	BodyHTML       sql.NullString
-	RawMIME        []byte
-	RawFormat      string
-	Recipients     []RecipientSet
-	LabelIDs       []int64
-	PreserveLabels bool
-	FTS            *FTSDoc
+	DiscordLocalVersion *DiscordLocalVersion
+	Message             *Message
+	Conversation        *ConversationPersistData
+	Metadata            *sql.NullString
+	BodyText            sql.NullString
+	BodyHTML            sql.NullString
+	RawMIME             []byte
+	RawFormat           string
+	Recipients          []RecipientSet
+	LabelIDs            []int64
+	PreserveLabels      bool
+	FTS                 *FTSDoc
 }
 
 // ConversationPersistData optionally makes conversation identity, title, and
@@ -1222,6 +1223,11 @@ func (s *Store) persistMessageWith(
 		message = &messageCopy
 	}
 
+	if data.DiscordLocalVersion != nil {
+		if err := s.recordDiscordLocalVersion(q, data); err != nil {
+			return 0, err
+		}
+	}
 	messageID, err := upsertMessageWith(q, s.dialect, message)
 	if err != nil {
 		return 0, fmt.Errorf("upsert message: %w", err)

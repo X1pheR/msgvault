@@ -1168,12 +1168,17 @@ func filterBackfillPage(
 	return eligible, pageMin, pageMax, reachedLower, nil
 }
 
-func (imp *Importer) persistPage(
+func (imp *Importer) persistPage(ctx context.Context, sourceID, conversationID int64, page []Message, summary *ImportSummary, media *MediaArchiver) error {
+	return imp.persistPageWithHistory(ctx, sourceID, conversationID, page, summary, media, nil)
+}
+
+func (imp *Importer) persistPageWithHistory(
 	ctx context.Context,
 	sourceID, conversationID int64,
 	page []Message,
 	summary *ImportSummary,
 	media *MediaArchiver,
+	version *store.DiscordLocalVersion,
 ) error {
 	ids := make([]string, 0, len(page))
 	for _, message := range page {
@@ -1200,17 +1205,29 @@ func (imp *Importer) persistPage(
 		}
 		metadata := sql.NullString{String: string(mapped.Metadata), Valid: len(mapped.Metadata) != 0}
 		messageID, err := imp.store.PersistMessage(&store.MessagePersistData{
-			Message:        &mapped.Message,
-			Metadata:       &metadata,
-			BodyText:       sql.NullString{String: mapped.BodyText, Valid: mapped.BodyText != ""},
-			RawMIME:        mapped.Raw,
-			RawFormat:      mapped.RawFormat,
-			Recipients:     recipients,
-			PreserveLabels: true,
+			DiscordLocalVersion: version,
+			Message:             &mapped.Message,
+			Metadata:            &metadata,
+			BodyText:            sql.NullString{String: mapped.BodyText, Valid: mapped.BodyText != ""},
+			RawMIME:             mapped.Raw,
+			RawFormat:           mapped.RawFormat,
+			Recipients:          recipients,
+			PreserveLabels:      true,
 			FTS: &store.FTSDoc{
 				Body: mapped.BodyText, FromAddr: fromLabel, ToAddrs: strings.Join(mentionLabels, " "),
 			},
 		})
+		if errors.Is(err, store.ErrDiscordLocalVersionReplayed) {
+			if _, counted := summary.processedMessageIDs[message.ID]; !counted {
+				summary.processedMessageIDs[message.ID] = struct{}{}
+				summary.MessagesProcessed++
+				summary.MessagesUpdated++
+			}
+			continue
+		}
+		if errors.Is(err, store.ErrDiscordLocalDeleted) {
+			continue
+		}
 		if err != nil {
 			return fmt.Errorf("persist Discord message %s: %w", message.ID, err)
 		}

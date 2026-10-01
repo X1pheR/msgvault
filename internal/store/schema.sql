@@ -815,3 +815,23 @@ CREATE TABLE IF NOT EXISTS attachment_packs (
     stored_bytes BIGINT NOT NULL,
     created_at   TEXT NOT NULL
 );
+
+-- Observed local Discord research versions; transport payloads remain current-only.
+CREATE TABLE IF NOT EXISTS discord_local_versions (
+    source_id INTEGER NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+    source_message_id TEXT NOT NULL,
+    version_hash TEXT NOT NULL,
+    body_text TEXT NOT NULL,
+    metadata TEXT NOT NULL,
+    source_edited_at TEXT NOT NULL,
+    observed_at TEXT NOT NULL,
+    PRIMARY KEY (source_id, source_message_id, version_hash)
+);
+
+-- Explicit local deletes are terminal, including messages never acquired.
+CREATE TABLE IF NOT EXISTS discord_local_deletions (
+    source_id INTEGER NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+    source_message_id TEXT NOT NULL,
+    deleted_at TEXT NOT NULL,
+    PRIMARY KEY (source_id, source_message_id)
+);
