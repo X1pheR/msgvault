@@ -69,6 +69,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     wget \
     libstdc++6 \
     bubblewrap \
+    libpcre2-8-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
