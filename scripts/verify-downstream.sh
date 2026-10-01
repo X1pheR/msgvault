@@ -64,7 +64,7 @@ docker run --rm \
     go test -count=1 -tags "fts5 sqlite_vec" ./internal/mcp -run "^TestSDDDLE009ReadOnlyServeOptionsOmitStatefulTools$"
     go test -count=1 -tags "fts5 sqlite_vec" ./internal/store -run "^TestSDDDLE013DiscordLocalExportKeepsDiscordParentAndAuthorSemantics$"
 
-    go test -count=1 -tags "fts5 sqlite_vec" ./internal/discord -run "^TestSDDDLE(017019|019|020)"
+    go test -count=1 -tags "fts5 sqlite_vec" ./internal/discord -run "^TestSDDDLE(017019|019|020|022)"
     go test -count=1 -tags "fts5 sqlite_vec" ./cmd/msgvault/cmd -run "^TestSDDDLE019"
     build_dir=$(mktemp -d /tmp/msgvault-downstream-build.XXXXXX)
     trap "rm -rf \"$build_dir\"" EXIT

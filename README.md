@@ -4,15 +4,17 @@ This repository is a maintained downstream of [kenn-io/msgvault](https://github.
 
 The current downstream baseline is upstream `v0.19.3` at `e90bcdc5eeaeaf387ff68872601d0c382c184a9b`. The first public downstream release is `v0.19.3-x1pher.3`.
 
-The downstream exists to provide a bounded local/offline Discord observation import path, keep those observations isolated under `source_type=discord_local` while preserving Discord message semantics, expose an explicit read-only MCP mode, and admit the observation importer through the daemon's bounded CLI runner. It adds no Discord credential acquisition, user-token/selfbot support, history-completeness cursor, second archive database, or new network ingest service.
+The downstream exists to provide a bounded local/offline Discord observation import path, keep those observations isolated under `source_type=discord_local` while preserving Discord message semantics, preserve observed research versions and terminal delete tombstones without deleted-body query access, expose an explicit read-only MCP mode, and admit the observation importer through the daemon's bounded CLI runner. It adds no Discord credential acquisition, user-token/selfbot support, history-completeness cursor, second archive database, or new network ingest service.
 
 Upstream issue [kenn-io/msgvault#884](https://github.com/kenn-io/msgvault/issues/884) remains the convergence route. This downstream is intended to shrink or disappear when an accepted upstream release provides equivalent behavior.
+
+The local history command is `msgvault discord-message-history --source <guild-or-account-identifier> --message-id <message-id>`. It reads only the local archive. Unchanged observations do not duplicate versions; explicit local deletes remove current/raw/prior bodies and stale replay cannot resurrect them. Only observed versions are represented. Attachment metadata remains; binaries are not acquired by this path.
 
 See [DOWNSTREAM.md](DOWNSTREAM.md) for exact provenance, versioning, verification, upstream-tracking, release, image, and convergence rules.
 
 ## Downstream image
 
-The maintained downstream image for this release is `ghcr.io/x1pher/msgvault:0.19.3-x1pher.3`.
+The lifecycle candidate targets downstream release `v0.19.3-x1pher.4`; publication and deployment acceptance are separate gates.
 
 ```bash
 docker run --rm ghcr.io/x1pher/msgvault:0.19.3-x1pher.3 version

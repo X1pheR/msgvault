@@ -23,9 +23,11 @@ The downstream source adds the bounded local Discord observation path already re
 - deterministic guild and account-scoped source binding with fail-closed mismatch checks;
 - normal msgvault persistence, FTS, reply, attachment-metadata, tombstone, and export behavior rather than direct database side writes;
 - explicit read-only MCP registration that omits stateful/export mutation tools;
-- daemon CLI admission for `import-discord-observations`, preserving one archive writer.
+- daemon CLI admission for `import-discord-observations`, preserving one archive writer;
+- transactional observed research history and explicit local read-only history retrieval;
+- terminal local deletion provenance with atomic current/raw/prior-body scrub and stale replay prevention.
 
-It does not add Discord credential acquisition, user-token/selfbot support, native history pagination, a local-observation sync cursor, an ingest daemon, a second archive, retention policy, or attachment-binary policy.
+It does not add Discord credential acquisition, user-token/selfbot support, native history pagination, a local-observation sync cursor, an ingest daemon, a second archive or attachment-binary acquisition. External acquisition configuration and backup scheduling remain deployment-owned.
 
 ## Versioning
 
@@ -90,3 +92,9 @@ If upstream implements an equivalent seam, first characterize the upstream behav
 7. Verify the live consumer before removing its previous rollback artifact.
 
 No upstream pull request is created automatically. Issue `kenn-io/msgvault#884` remains the alignment/convergence route; any upstream PR is a separate maintainer-alignment decision.
+
+## Lifecycle candidate security and recovery
+
+The lifecycle candidate retains upstream v0.19.3 while updating the indirect golang.org/x/mod dependency to v0.40.0 after the source scanner reported CVE-2026-56864 and CVE-2026-56865 at v0.38.0. The Go module graph also advances x/tools to v0.49.0 and x/telemetry to the selected August 2026 revision. Regression and packaged-build gates must pass for the exact candidate. The optional inherited screenshot Dockerfile has an explicit, expiring non-production disposition in .trivyignore.yaml; production remains non-root.
+
+The maintained verifier includes passive archive backup/recovery, schema/logical parity, observed history/tombstones and read-only restored queries. It uses no provider client. Production backup/recovery acceptance remains the deployment owner's responsibility and must not start acquisition during restore.
