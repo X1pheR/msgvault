@@ -7,8 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go.kenn.io/msgvault/internal/store"
 	"io"
 	"strings"
+	"time"
 )
 
 const (
@@ -178,7 +180,7 @@ func (imp *Importer) ImportObservations(
 					err,
 				)
 			}
-			if err := imp.store.MarkMessageDeleted(source.ID, observation.MessageID); err != nil {
+			if err := imp.store.MarkDiscordLocalDeleted(ctx, source.ID, observation.MessageID); err != nil {
 				return summary, fmt.Errorf(
 					"mark observed Discord message %s deleted: %w",
 					observation.MessageID,
@@ -347,13 +349,27 @@ func (imp *Importer) importObservedMessage(
 		return err
 	}
 
-	return imp.persistPage(
+	metadata, err := json.Marshal(struct {
+		ChannelID   string            `json:"channel_id"`
+		Author      User              `json:"author"`
+		Attachments []Attachment      `json:"attachments"`
+		Reference   *MessageReference `json:"reference,omitempty"`
+	}{messageCopy.ChannelID, messageCopy.Author, messageCopy.Attachments, messageCopy.MessageReference})
+	if err != nil {
+		return err
+	}
+	editedAt := ""
+	if messageCopy.EditedTimestamp != nil {
+		editedAt = messageCopy.EditedTimestamp.UTC().Format(time.RFC3339Nano)
+	}
+	return imp.persistPageWithHistory(
 		ctx,
 		sourceID,
 		conversationID,
 		[]Message{messageCopy},
 		summary,
 		nil,
+		&store.DiscordLocalVersion{Metadata: string(metadata), SourceEditedAt: editedAt},
 	)
 }
 

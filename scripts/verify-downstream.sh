@@ -34,6 +34,12 @@ docker run --rm \
       internal/mcp/server.go
       internal/store/discord_local_message_export_test.go
       internal/store/message_export.go
+      internal/store/discord_local_lifecycle.go
+      internal/store/messages.go
+      internal/discord/importer.go
+      internal/discord/observation_lifecycle_test.go
+      cmd/msgvault/cmd/discord_local_history.go
+      cmd/msgvault/cmd/discord_local_history_test.go
     )
 
     unformatted=$(gofmt -l "${go_files[@]}")
@@ -58,6 +64,8 @@ docker run --rm \
     go test -count=1 -tags "fts5 sqlite_vec" ./internal/mcp -run "^TestSDDDLE009ReadOnlyServeOptionsOmitStatefulTools$"
     go test -count=1 -tags "fts5 sqlite_vec" ./internal/store -run "^TestSDDDLE013DiscordLocalExportKeepsDiscordParentAndAuthorSemantics$"
 
+    go test -count=1 -tags "fts5 sqlite_vec" ./internal/discord -run "^TestSDDDLE(017019|019|020)"
+    go test -count=1 -tags "fts5 sqlite_vec" ./cmd/msgvault/cmd -run "^TestSDDDLE019"
     build_dir=$(mktemp -d /tmp/msgvault-downstream-build.XXXXXX)
     trap "rm -rf \"$build_dir\"" EXIT
     CGO_ENABLED=1 go build \
@@ -67,6 +75,7 @@ docker run --rm \
       -o "$build_dir/msgvault" \
       ./cmd/msgvault
 
+    "$build_dir/msgvault" discord-message-history --help >/dev/null
     "$build_dir/msgvault" import-discord-observations --help >/dev/null
     "$build_dir/msgvault" mcp --help | grep -- "--read-only" >/dev/null
   '
