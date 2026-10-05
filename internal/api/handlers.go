@@ -263,8 +263,10 @@ type MessageSummary struct {
 type MessageDetail struct {
 	MessageSummary
 
-	Body     string `json:"body"`
-	BodyHTML string `json:"body_html,omitempty"`
+	SourceConversationID string                    `json:"source_conversation_id,omitempty"`
+	SourceProvenance     *SourceProvenanceResponse `json:"source_provenance,omitempty"`
+	Body                 string                    `json:"body"`
+	BodyHTML             string                    `json:"body_html,omitempty"`
 	// BodyOmitted marks a conversation-window message whose body was left
 	// out to keep the response within the cumulative inline-body budget.
 	// The snippet is still present; fetch the full body via
@@ -483,9 +485,11 @@ func messageDetailFromQuery(qMsg *query.MessageDetail) MessageDetail {
 			HasAttach:       qMsg.HasAttachments,
 			SizeBytes:       qMsg.SizeEstimate,
 		},
-		Body:        body,
-		BodyHTML:    qMsg.BodyHTML,
-		Attachments: attachments,
+		SourceConversationID: qMsg.SourceConversationID,
+		SourceProvenance:     sourceProvenanceResponse(qMsg.SourceProvenance),
+		Body:                 body,
+		BodyHTML:             qMsg.BodyHTML,
+		Attachments:          attachments,
 	}
 }
 
@@ -658,9 +662,11 @@ func (s *Server) handleGetMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	detail := MessageDetail{
-		MessageSummary: toMessageSummary(*msg),
-		Body:           msg.Body,
-		BodyHTML:       msg.BodyHTML,
+		MessageSummary:       toMessageSummary(*msg),
+		SourceConversationID: msg.SourceConversationID,
+		SourceProvenance:     sourceProvenanceResponse(msg.SourceProvenance),
+		Body:                 msg.Body,
+		BodyHTML:             msg.BodyHTML,
 	}
 
 	attachments := make([]AttachmentInfo, 0, len(msg.Attachments))

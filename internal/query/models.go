@@ -7,6 +7,8 @@ package query
 import (
 	"maps"
 	"time"
+
+	"go.kenn.io/msgvault/internal/sourceprovenance"
 )
 
 // AggregateRow represents a single row in an aggregate view.
@@ -76,8 +78,9 @@ type MessageDetail struct {
 	BodyHTML string `json:"body_html"`
 
 	// Metadata
-	Labels      []string         `json:"labels"`
-	Attachments []AttachmentInfo `json:"attachments"`
+	Labels           []string                 `json:"labels"`
+	Attachments      []AttachmentInfo         `json:"attachments"`
+	SourceProvenance *sourceprovenance.Source `json:"source_provenance,omitempty"`
 }
 
 // Address represents an email address with optional display name.

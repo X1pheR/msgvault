@@ -28,13 +28,25 @@ docker run --rm \
       cmd/msgvault/cmd/mcp.go
       cmd/msgvault/cmd/mcp_read_only_test.go
       internal/api/cli_handlers.go
+      internal/api/handlers.go
       internal/api/handlers_test.go
+      internal/api/openapi.go
+      internal/api/openapi_test.go
+      internal/api/source_provenance.go
+      internal/daemonclient/engine_adapter.go
+      internal/daemonclient/store_adapter.go
       internal/discord/mapping.go
       internal/discord/observation_recovery_test.go
       internal/discord/observation_import.go
       internal/discord/observation_import_test.go
       internal/mcp/discord_local_read_only_test.go
+      internal/mcp/handlers.go
       internal/mcp/server.go
+      internal/query/models.go
+      internal/query/shared.go
+      internal/sourceprovenance/source.go
+      internal/sourceprovenance/source_test.go
+      internal/store/api.go
       internal/store/discord_local_message_export_test.go
       internal/store/message_export.go
       internal/store/discord_local_lifecycle.go
@@ -63,7 +75,9 @@ docker run --rm \
 
     go test -count=1 -tags "fts5 sqlite_vec" ./internal/discord -run "^(TestSDDDLE001LocalObservationSourceTypeAndMessageType|TestSDDDLE002003SourceIdentifierAndScopeValidation|TestImportObservationsArchivesLocalDiscordFactsWithoutProviderAPI|TestSDDDLE005AccountScopedDMAndGroupDMConversationTypes|TestImportObservationsInterruptedReplayConverges|TestImportObservationsRejectsMalformedInput|TestSDDDLE003004RejectsMissingOrMismatchedEmbeddedSourceIdentity)$"
     go test -count=1 -tags "fts5 sqlite_vec" ./cmd/msgvault/cmd -run "^(TestImportDiscordObservationsRoutesThroughDaemonCLIRunner|TestSDDDLE001NativeDiscordResolverExcludesLocalObservationSources|TestSDDDLE009ApplyMCPReadOnlyDropsStatefulCapability|TestSDDDLE009MCPCommandExposesReadOnlyFlag)$"
-    go test -count=1 -tags "fts5 sqlite_vec" ./internal/api -run "^TestHandleCLIRunBackupSubcommandAdmission$"
+    go test -count=1 -tags "fts5 sqlite_vec" ./internal/sourceprovenance
+    go test -count=1 -tags "fts5 sqlite_vec" ./internal/api -run "^(TestHandleCLIRunBackupSubcommandAdmission|TestMessageDetailPublishesSafeSourceProvenance|TestOpenAPIDocumentUsesAPISchemaVersion)$"
+    go test -count=1 -tags "fts5 sqlite_vec" ./internal/daemonclient -run "^TestEngineGetMessage"
     go test -count=1 -tags "fts5 sqlite_vec" ./internal/mcp -run "^TestSDDDLE009ReadOnlyServeOptionsOmitStatefulTools$"
     go test -count=1 -tags "fts5 sqlite_vec" ./internal/store -run "^TestSDDDLE013DiscordLocalExportKeepsDiscordParentAndAuthorSemantics$"
 

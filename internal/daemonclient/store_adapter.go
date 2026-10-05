@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.kenn.io/msgvault/internal/sourceprovenance"
 	"go.kenn.io/msgvault/internal/store"
 	apiclient "go.kenn.io/msgvault/pkg/client"
 	"go.kenn.io/msgvault/pkg/client/generated"
@@ -123,27 +124,39 @@ func generatedDetailToAPIMessage(m *generated.MessageDetail) *store.APIMessage {
 		}
 	}
 	msg := &store.APIMessage{
-		ID:              m.ID,
-		SourceID:        int64Value(m.SourceID),
-		SourceMessageID: stringValue(m.SourceMessageID),
-		ConversationID:  int64Value(m.ConversationID),
-		Subject:         m.Subject,
-		MessageType:     stringValue(m.MessageType),
-		From:            m.From,
-		FromEmail:       stringValue(m.FromEmail),
-		FromName:        stringValue(m.FromName),
-		FromPhone:       stringValue(m.FromPhone),
-		To:              m.To,
-		Cc:              m.Cc,
-		Bcc:             m.Bcc,
-		SentAt:          parseTime(m.SentAt),
-		DeletedAt:       deletedAt,
-		Snippet:         m.Snippet,
-		Labels:          m.Labels,
-		HasAttachments:  m.HasAttachments,
-		SizeEstimate:    m.SizeBytes,
-		Body:            m.Body,
-		Attachments:     apiAttachmentsFromGenerated(m.Attachments),
+		ID:                   m.ID,
+		SourceID:             int64Value(m.SourceID),
+		SourceMessageID:      stringValue(m.SourceMessageID),
+		ConversationID:       int64Value(m.ConversationID),
+		SourceConversationID: stringValue(m.SourceConversationID),
+		Subject:              m.Subject,
+		MessageType:          stringValue(m.MessageType),
+		From:                 m.From,
+		FromEmail:            stringValue(m.FromEmail),
+		FromName:             stringValue(m.FromName),
+		FromPhone:            stringValue(m.FromPhone),
+		To:                   m.To,
+		Cc:                   m.Cc,
+		Bcc:                  m.Bcc,
+		SentAt:               parseTime(m.SentAt),
+		DeletedAt:            deletedAt,
+		Snippet:              m.Snippet,
+		Labels:               m.Labels,
+		HasAttachments:       m.HasAttachments,
+		SizeEstimate:         m.SizeBytes,
+		Body:                 m.Body,
+		Attachments:          apiAttachmentsFromGenerated(m.Attachments),
+	}
+	if m.SourceProvenance != nil {
+		msg.SourceProvenance = &sourceprovenance.Source{
+			Kind:               stringValue(m.SourceProvenance.Kind),
+			Repository:         stringValue(m.SourceProvenance.Repository),
+			RepositoryURL:      stringValue(m.SourceProvenance.RepositoryURL),
+			Commit:             stringValue(m.SourceProvenance.Commit),
+			ArchivePaths:       append([]string(nil), m.SourceProvenance.ArchivePaths...),
+			AuthorIdentity:     stringValue(m.SourceProvenance.AuthorIdentity),
+			LifecycleAuthority: stringValue(m.SourceProvenance.LifecycleAuthority),
+		}
 	}
 	return msg
 }

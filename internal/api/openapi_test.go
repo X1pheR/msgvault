@@ -724,3 +724,27 @@ func generatedGoFiles(dir string) ([]string, error) {
 	sort.Strings(files)
 	return files, nil
 }
+
+func TestMessageDetailPublishesSafeSourceProvenance(t *testing.T) {
+	doc := OpenAPIDocument()
+	schema := doc.Components.Schemas.Map()["MessageDetail"]
+	require.NotNil(t, schema, "MessageDetail schema")
+	require.NotNil(t, schema.Properties["source_conversation_id"], "source_conversation_id")
+	provenance := schema.Properties["source_provenance"]
+	require.NotNil(t, provenance, "source_provenance")
+	require.NotEmpty(t, provenance.Ref, "source_provenance must reference a typed schema")
+
+	provenanceSchema := doc.Components.Schemas.SchemaFromRef(provenance.Ref)
+	require.NotNil(t, provenanceSchema, "SourceProvenanceResponse schema")
+	keys := make([]string, 0, len(provenanceSchema.Properties))
+	for key := range provenanceSchema.Properties {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	assert.ElementsMatch(t,
+		[]string{"kind", "repository", "repository_url", "commit", "archive_paths", "author_identity", "lifecycle_authority"},
+		keys,
+	)
+	assert.NotContains(t, schema.Required, "source_conversation_id")
+	assert.NotContains(t, schema.Required, "source_provenance")
+}

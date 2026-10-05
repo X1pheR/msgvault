@@ -3196,11 +3196,15 @@ components:
           type: integer
         snippet:
           type: string
+        source_conversation_id:
+          type: string
         source_id:
           format: int64
           type: integer
         source_message_id:
           type: string
+        source_provenance:
+          $ref: "#/components/schemas/SourceProvenanceResponse"
         subject:
           type: string
         to:
@@ -4465,6 +4469,26 @@ components:
         - signals
         - confirmed_at
       type: object
+    SourceProvenanceResponse:
+      properties:
+        archive_paths:
+          items:
+            type: string
+          nullable: true
+          type: array
+        author_identity:
+          type: string
+        commit:
+          type: string
+        kind:
+          type: string
+        lifecycle_authority:
+          type: string
+        repository:
+          type: string
+        repository_url:
+          type: string
+      type: object
     SourceStatus:
       properties:
         active_sync:
@@ -5169,7 +5193,7 @@ components:
       type: apiKey
 info:
   title: msgvault API
-  version: 1.36.0
+  version: 1.37.0
 openapi: 3.0.3
 paths:
   /api/ping:

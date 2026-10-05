@@ -14,6 +14,7 @@ import (
 
 	"go.kenn.io/msgvault/internal/mime"
 	"go.kenn.io/msgvault/internal/search"
+	"go.kenn.io/msgvault/internal/sourceprovenance"
 	"go.kenn.io/msgvault/internal/store"
 )
 
@@ -472,7 +473,8 @@ func getMessageByQueryShared(ctx context.Context, db *sql.DB, rebind rebindFunc,
 			m.received_at,
 			COALESCE(m.size_estimate, 0),
 			m.has_attachments,
-			m.deleted_from_source_at
+			m.deleted_from_source_at,
+			COALESCE(m.metadata, '{}')
 		FROM %smessages m
 		LEFT JOIN %sconversations conv ON conv.id = m.conversation_id
 		WHERE %s
@@ -480,6 +482,7 @@ func getMessageByQueryShared(ctx context.Context, db *sql.DB, rebind rebindFunc,
 
 	var msg MessageDetail
 	var sentAt, receivedAt, deletedAt sql.NullTime
+	var sourceMetadata string
 	err := db.QueryRowContext(ctx, rebind(query), args...).Scan(
 		&msg.ID,
 		&msg.SourceID,
@@ -494,6 +497,7 @@ func getMessageByQueryShared(ctx context.Context, db *sql.DB, rebind rebindFunc,
 		&msg.SizeEstimate,
 		&msg.HasAttachments,
 		&deletedAt,
+		&sourceMetadata,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil //nolint:nilnil // Engine.GetMessage/GetMessageBySourceID use (nil, nil) for not-found; callers chain fallback lookups on the nil result
@@ -513,6 +517,7 @@ func getMessageByQueryShared(ctx context.Context, db *sql.DB, rebind rebindFunc,
 		t := deletedAt.Time
 		msg.DeletedAt = &t
 	}
+	msg.SourceProvenance = sourceprovenance.FromMessageMetadata([]byte(sourceMetadata))
 
 	// Fetch body from separate table (PK lookup, avoids scanning large body B-tree)
 	var bodyText, bodyHTML sql.NullString

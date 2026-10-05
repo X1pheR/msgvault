@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 
 	"github.com/danielgtaylor/huma/v2"
 	"go.kenn.io/msgvault/internal/config"
@@ -178,7 +179,11 @@ import (
 // timeline routes, and adds a typed terminal error variant to CLI identity
 // discovery NDJSON streams. Additive (minor bump): existing progress/result
 // events and relationship requests without identity filters are unchanged.
-const APISchemaVersion = "1.36.0"
+// 1.37.0 adds optional source_conversation_id and a deliberately small
+// source_provenance object to message detail. Provenance exposes only reviewed
+// import-origin fields and does not publish arbitrary provider metadata.
+// Additive (minor bump): existing message-detail clients remain compatible.
+const APISchemaVersion = "1.37.0"
 
 // OpenAPIDocument builds the API schema from the same Huma route registration
 // used by the daemon. It binds no socket and needs no database.
@@ -205,11 +210,30 @@ func baseOpenAPIDocument() *huma.OpenAPI {
 	s.registerHumaRoutes(api, apiV1)
 	doc := api.OpenAPI()
 	hardenSettingsSchemas(doc)
+	hardenMessageDetailSchemas(doc)
 	hardenSavedViewSchemas(doc)
 	hardenExploreSchemas(doc)
 	hardenSearchCoverageSchemas(doc)
 	hardenTaskLinkSchemas(doc)
 	return doc
+}
+
+func hardenMessageDetailSchemas(doc *huma.OpenAPI) {
+	if doc == nil || doc.Components == nil || doc.Components.Schemas == nil {
+		return
+	}
+	reg := doc.Components.Schemas
+	detail := reg.Map()["MessageDetail"]
+	if detail == nil {
+		return
+	}
+	if detail.Properties == nil {
+		detail.Properties = map[string]*huma.Schema{}
+	}
+	detail.Properties["source_conversation_id"] = &huma.Schema{Type: huma.TypeString}
+	detail.Properties["source_provenance"] = reg.Schema(
+		reflect.TypeFor[SourceProvenanceResponse](), true, "",
+	)
 }
 
 func hardenTaskLinkSchemas(doc *huma.OpenAPI) {
