@@ -23,6 +23,7 @@ The downstream source adds the bounded local Discord observation path already re
 - deterministic guild and account-scoped source binding with fail-closed mismatch checks;
 - normal msgvault persistence, FTS, reply, attachment-metadata, tombstone, and export behavior rather than direct database side writes;
 - explicit read-only MCP registration that omits stateful/export mutation tools;
+- additive read-only message-detail projection of source conversation identity plus a deliberately sanitized public-mirror provenance subset, without exposing arbitrary provider metadata;
 - daemon CLI admission for `import-discord-observations`, preserving one archive writer;
 - transactional observed research history and explicit local read-only history retrieval;
 - terminal local deletion provenance with atomic current/raw/prior-body scrub and stale replay prevention.
@@ -42,6 +43,7 @@ Rules:
 3. Moving to a new upstream release creates a new downstream version on that base after compatibility and regression acceptance.
 4. Accepted release tags are immutable; never rewrite an accepted release to follow upstream.
 5. The first public release is `v0.19.3-x1pher.3`; the `x1pher.N` suffix is the maintained downstream release identity.
+6. `v0.19.3-x1pher.7` adds the additive read-only message provenance projection required by Discord-centred archive clients; it does not change archive write semantics or provider access.
 
 The inherited upstream Docker publication workflow derives its registry from `github.repository`. Versioned downstream images therefore publish under `ghcr.io/x1pher/msgvault`. For `v0.19.3-x1pher.3`, the semver image tag is `ghcr.io/x1pher/msgvault:0.19.3-x1pher.3`. Production consumers must pin an exact downstream version tag. Moving tags such as `latest` are never production selectors; the resolved image digest is release/provenance evidence.
 

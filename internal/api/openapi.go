@@ -4,6 +4,7 @@ import (
 	"encoding/json/jsontext"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -341,7 +342,9 @@ import (
 // 2.35.0 adds scope_escalation_source_type to staged-deletion plans so local
 // CLI clients can authorize Microsoft Graph mail before starting the worker.
 // 3.0.0 replaces unguarded identity decisions with review-token routes and adds consented identity scoring.
-const APISchemaVersion = "3.0.0"
+// 3.1.0 adds optional allowlisted source provenance to message details.
+// Existing fields and routes retain their contracts.
+const APISchemaVersion = "3.1.0"
 
 // OpenAPIDocument builds the API schema from the same Huma route registration
 // used by the daemon. It binds no socket and needs no database.
@@ -398,6 +401,7 @@ func baseOpenAPIDocument(includeHidden bool) *huma.OpenAPI {
 	s.registerHumaRoutes(api, apiV1)
 	doc := api.OpenAPI()
 	hardenSettingsSchemas(doc)
+	hardenMessageDetailSchemas(doc)
 	hardenSavedViewSchemas(doc)
 	hardenExploreSchemas(doc)
 	hardenSearchCoverageSchemas(doc)
@@ -533,6 +537,24 @@ func hardenActivitySchemas(doc *huma.OpenAPI) {
 			personIDs.Items.Minimum = &minimum
 		}
 	}
+}
+
+func hardenMessageDetailSchemas(doc *huma.OpenAPI) {
+	if doc == nil || doc.Components == nil || doc.Components.Schemas == nil {
+		return
+	}
+	reg := doc.Components.Schemas
+	detail := reg.Map()["MessageDetail"]
+	if detail == nil {
+		return
+	}
+	if detail.Properties == nil {
+		detail.Properties = map[string]*huma.Schema{}
+	}
+	detail.Properties["source_conversation_id"] = &huma.Schema{Type: huma.TypeString}
+	detail.Properties["source_provenance"] = reg.Schema(
+		reflect.TypeFor[SourceProvenanceResponse](), true, "",
+	)
 }
 
 func hardenTaskLinkSchemas(doc *huma.OpenAPI) {

@@ -22,6 +22,7 @@ import (
 	"go.kenn.io/msgvault/internal/query"
 	"go.kenn.io/msgvault/internal/savedview"
 	"go.kenn.io/msgvault/internal/search"
+	"go.kenn.io/msgvault/internal/sourceprovenance"
 	"go.kenn.io/msgvault/internal/store"
 	"go.kenn.io/msgvault/internal/vector"
 	"go.kenn.io/msgvault/internal/vector/chunkmatch"
@@ -1568,32 +1569,34 @@ func lineNumberAt(body string, byteOffset int) int {
 }
 
 type getMessageResponse struct {
-	WebURL               string                 `json:"web_url,omitempty"`
-	ID                   int64                  `json:"id"`
-	SourceMessageID      string                 `json:"source_message_id"`
-	ConversationID       int64                  `json:"conversation_id"`
-	SourceConversationID string                 `json:"source_conversation_id"`
-	Subject              string                 `json:"subject"`
-	MessageType          string                 `json:"message_type,omitempty"`
-	Snippet              string                 `json:"snippet"`
-	SentAt               time.Time              `json:"sent_at"`
-	ReceivedAt           *time.Time             `json:"received_at,omitempty"`
-	DeletedAt            *time.Time             `json:"deleted_at,omitempty"`
-	SizeEstimate         int64                  `json:"size_estimate"`
-	HasAttachments       bool                   `json:"has_attachments"`
-	From                 []query.Address        `json:"from"`
-	To                   []query.Address        `json:"to"`
-	Cc                   []query.Address        `json:"cc"`
-	Bcc                  []query.Address        `json:"bcc"`
-	BodyText             string                 `json:"body_text"`
-	BodyHTML             string                 `json:"body_html"`
-	BodyFormat           string                 `json:"body_format,omitempty"`
-	BodyLength           int                    `json:"body_length"`
-	BodyReturned         int                    `json:"body_returned"`
-	Offset               int                    `json:"offset"`
-	HasMore              bool                   `json:"has_more"`
-	Labels               []string               `json:"labels"`
-	Attachments          []query.AttachmentInfo `json:"attachments"`
+	WebURL               string                   `json:"web_url,omitempty"`
+	ID                   int64                    `json:"id"`
+	SourceMessageID      string                   `json:"source_message_id"`
+	ConversationID       int64                    `json:"conversation_id"`
+	SourceConversationID string                   `json:"source_conversation_id"`
+	Subject              string                   `json:"subject"`
+	MessageType          string                   `json:"message_type,omitempty"`
+	Snippet              string                   `json:"snippet"`
+	SentAt               time.Time                `json:"sent_at"`
+	ReceivedAt           *time.Time               `json:"received_at,omitempty"`
+	DeletedAt            *time.Time               `json:"deleted_at,omitempty"`
+	SizeEstimate         int64                    `json:"size_estimate"`
+	HasAttachments       bool                     `json:"has_attachments"`
+	From                 []query.Address          `json:"from"`
+	To                   []query.Address          `json:"to"`
+	Cc                   []query.Address          `json:"cc"`
+	Bcc                  []query.Address          `json:"bcc"`
+	BodyText             string                   `json:"body_text"`
+	BodyHTML             string                   `json:"body_html"`
+	BodyFormat           string                   `json:"body_format,omitempty"`
+	BodyLength           int                      `json:"body_length"`
+	BodyReturned         int                      `json:"body_returned"`
+	Offset               int                      `json:"offset"`
+	HasMore              bool                     `json:"has_more"`
+	Labels               []string                 `json:"labels"`
+	Attachments          []query.AttachmentInfo   `json:"attachments"`
+	SourceID             int64                    `json:"source_id,omitempty"`
+	SourceProvenance     *sourceprovenance.Source `json:"source_provenance,omitempty"`
 }
 
 func (h *handlers) getMessage(ctx context.Context, req toolRequest) (*toolResult, error) {
@@ -1665,6 +1668,7 @@ func (h *handlers) getMessage(ctx context.Context, req toolRequest) (*toolResult
 	return jsonResult(getMessageResponse{
 		WebURL:               msg.WebURL,
 		ID:                   msg.ID,
+		SourceID:             msg.SourceID,
 		SourceMessageID:      msg.SourceMessageID,
 		ConversationID:       msg.ConversationID,
 		SourceConversationID: msg.SourceConversationID,
@@ -1689,6 +1693,7 @@ func (h *handlers) getMessage(ctx context.Context, req toolRequest) (*toolResult
 		HasMore:              sliceEnd < bodyLen,
 		Labels:               msg.Labels,
 		Attachments:          msg.Attachments,
+		SourceProvenance:     msg.SourceProvenance,
 	})
 }
 
