@@ -133,6 +133,16 @@ type MessageQuery struct {
 	Limit  int
 }
 
+type MirrorProvenance struct {
+	Kind               string   `json:"kind,omitempty"`
+	Repository         string   `json:"repository,omitempty"`
+	RepositoryURL      string   `json:"repository_url,omitempty"`
+	Commit             string   `json:"commit,omitempty"`
+	ArchivePaths       []string `json:"archive_paths,omitempty"`
+	AuthorIdentity     string   `json:"author_identity,omitempty"`
+	LifecycleAuthority string   `json:"lifecycle_authority,omitempty"`
+}
+
 type Message struct {
 	ID                string            `json:"id"`
 	ChannelID         string            `json:"channel_id"`
@@ -164,6 +174,7 @@ type Message struct {
 	Components        jsontext.Value    `json:"components"`
 	StickerItems      []StickerItem     `json:"sticker_items"`
 	Poll              *Poll             `json:"poll"`
+	MirrorProvenance  *MirrorProvenance `json:"mirror_provenance,omitempty"`
 	Raw               jsontext.Value    `json:"-"`
 }
 
