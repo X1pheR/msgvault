@@ -349,11 +349,12 @@ func (imp *Importer) importObservedMessage(
 	}
 
 	metadata, err := json.Marshal(struct {
-		ChannelID   string            `json:"channel_id"`
-		Author      User              `json:"author"`
-		Attachments []Attachment      `json:"attachments"`
-		Reference   *MessageReference `json:"reference,omitempty"`
-	}{messageCopy.ChannelID, messageCopy.Author, messageCopy.Attachments, messageCopy.MessageReference})
+		ChannelID        string            `json:"channel_id"`
+		Author           User              `json:"author"`
+		Attachments      []Attachment      `json:"attachments"`
+		Reference        *MessageReference `json:"reference,omitempty"`
+		MirrorProvenance *MirrorProvenance `json:"mirror_provenance,omitempty"`
+	}{messageCopy.ChannelID, messageCopy.Author, messageCopy.Attachments, messageCopy.MessageReference, messageCopy.MirrorProvenance})
 	if err != nil {
 		return err
 	}

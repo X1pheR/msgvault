@@ -110,6 +110,7 @@ type messageMetadata struct {
 	ReferencedGuildID   string                     `json:"referenced_guild_id,omitempty"`
 	Thread              *messageThreadMetadata     `json:"thread,omitempty"`
 	ReactionSummaries   []reactionSummary          `json:"reaction_summaries,omitempty"`
+	MirrorProvenance    *MirrorProvenance          `json:"mirror_provenance,omitempty"`
 }
 
 func mapMessage(message *Message, conversationID, sourceID int64) (mappedMessage, error) {
@@ -180,6 +181,7 @@ func buildMessageMetadata(message *Message) messageMetadata {
 			ID: thread.ID, ParentChannelID: thread.ParentID, Type: thread.Type, Name: thread.Name,
 		}
 	}
+	metadata.MirrorProvenance = message.MirrorProvenance
 	for _, reaction := range message.Reactions {
 		summary := reactionSummary{Emoji: reaction.Emoji.Name, Count: reaction.Count}
 		if reaction.Emoji.ID != "" {

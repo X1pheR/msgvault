@@ -419,3 +419,59 @@ func TestSDDDLE003004RejectsMissingOrMismatchedEmbeddedSourceIdentity(t *testing
 		})
 	}
 }
+
+func TestImportObservationsPreservesOptionalMirrorProvenance(t *testing.T) {
+	require := require.New(t)
+	assert := assert.New(t)
+
+	st := testutil.NewSQLiteTestStore(t)
+	channel := Channel{ID: "800", GuildID: "700", Type: channelTypePublicThread, ParentID: "799", Name: "topic"}
+	message := observedMessage("900", channel.ID, channel.GuildID, "provenance token")
+	message.MirrorProvenance = &MirrorProvenance{
+		Kind:               "public_git_mirror",
+		Repository:         "example/archive",
+		RepositoryURL:      "https://example.invalid/example/archive",
+		Commit:             "0123456789abcdef",
+		ArchivePaths:       []string{"archives/forum/800-topic.txt"},
+		AuthorIdentity:     "display_name_only",
+		LifecycleAuthority: "append_only_snapshot_no_edit_delete_authority",
+	}
+
+	_, err := NewImporter(st, nil).ImportObservations(t.Context(), ObservationImportOptions{
+		SourceIdentifier: "700",
+		Reader: observationReader(t, "700",
+			Observation{Version: 1, Kind: ObservationKindMessage, Channel: &channel, Message: &message},
+		),
+	})
+	require.NoError(err)
+
+	var messageMetadata string
+	require.NoError(st.DB().QueryRow(st.Rebind(
+		"SELECT metadata FROM messages WHERE source_message_id = ?",
+	), message.ID).Scan(&messageMetadata))
+	assert.Contains(messageMetadata, `"mirror_provenance"`)
+	assert.Contains(messageMetadata, `"repository":"example/archive"`)
+	assert.Contains(messageMetadata, `"commit":"0123456789abcdef"`)
+	assert.Contains(messageMetadata, `"lifecycle_authority":"append_only_snapshot_no_edit_delete_authority"`)
+
+	var versionMetadata string
+	require.NoError(st.DB().QueryRow(st.Rebind(
+		"SELECT metadata FROM discord_local_versions WHERE source_message_id = ? ORDER BY rowid DESC LIMIT 1",
+	), message.ID).Scan(&versionMetadata))
+	assert.Contains(versionMetadata, `"mirror_provenance"`)
+	assert.Contains(versionMetadata, `"archive_paths":["archives/forum/800-topic.txt"]`)
+
+	_, err = NewImporter(st, nil).ImportObservations(t.Context(), ObservationImportOptions{
+		SourceIdentifier: "700",
+		Reader: observationReader(t, "700",
+			Observation{Version: 1, Kind: ObservationKindMessage, Channel: &channel, Message: &message},
+		),
+	})
+	require.NoError(err)
+
+	var count int
+	require.NoError(st.DB().QueryRow(st.Rebind(
+		"SELECT COUNT(*) FROM messages WHERE source_message_id = ?",
+	), message.ID).Scan(&count))
+	assert.Equal(1, count)
+}
