@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "name": "msgvault",
+  "category": "Knowledge",
+  "kind": "application",
+  "upstream": {
+    "repository": "kenn-io/msgvault",
+    "reason": "Adds bounded local Discord observation import and explicit read-only research support not currently available upstream."
+  }
+}
