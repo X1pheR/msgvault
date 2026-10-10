@@ -4,6 +4,24 @@
 - Downstream: https://github.com/X1pheR/msgvault
 - Current documented comparison baseline: v0.19.3
 
+## Discord offline observations: existing upstream issue
+
+Local MV-P01 source commit cade6dc adds a local Discord observation
+importer with associated tests. The existing upstream
+[kenn-io/msgvault issue #884](https://github.com/kenn-io/msgvault/issues/884),
+authored by X1pheR, requests a bounded local/offline importer with
+snapshot/upsert and explicit delete semantics, without user-token
+or selfbot acquisition. The existing public comment documents a
+synthetic additive importer prototype with tests on release v0.19.3
+and upstream main. The maintainer has not yet accepted source identity
+for DM/group-DM observations and no upstream PR exists.
+
+MV-P01 remains nonconformant. Do not treat the issue alone as an
+upstream contribution, or submit the entire downstream product
+patch with unrelated MCP/product-specific changes. Resolve
+source identity with the maintainer, then prepare an upstream-native
+tested PR or a precise operator-approved blocked disposition.
+
 ## Machine-readable patch register
 
 This is a source-history-based initial logical patch inventory and must be reconciled against an exact upstream tree, current GitHub issue/PR state and the canonical product contract before it can be called exhaustive or compliant. The missing upstream links intentionally fail the current SDLC policy. Product-specific operational changes should move out of the fork when possible. No divergence ADR is approved, and these records do not grandfather one.
@@ -23,7 +41,7 @@ This is a source-history-based initial logical patch inventory and must be recon
         "cade6dc"
       ],
       "checked_on": "2026-10-10",
-      "issue": null,
+      "issue": "https://github.com/kenn-io/msgvault/issues/884",
       "pr": null
     },
     {
