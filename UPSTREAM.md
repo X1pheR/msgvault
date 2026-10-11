@@ -99,7 +99,7 @@ This is a source-history-based initial logical patch inventory and must be recon
     {
       "id": "MV-P05",
       "kind": "upstream",
-      "scope": "Remaining Go and PCRE2 dependency hardening, excluding separately tracked gRPC 1.83.2",
+      "scope": "Remaining Go, documentation Python and runtime PCRE2 dependency hardening; excludes gRPC MV-P08 and web dependencies MV-P09",
       "local_commits": [
         "da4f187",
         "e7b84d7",
@@ -148,10 +148,46 @@ This is a source-history-based initial logical patch inventory and must be recon
       "issue": "https://github.com/kenn-io/msgvault/issues/1218",
       "pr": "https://github.com/kenn-io/msgvault/pull/1220",
       "pr_state": "merged"
+    },
+    {
+      "id": "MV-P09",
+      "kind": "upstream",
+      "scope": "Pinned web dependencies DOMPurify 3.4.13, PostCSS 8.5.23 and Vitest 4.1.11",
+      "local_commits": [
+        "da4f187"
+      ],
+      "checked_on": "2026-10-11",
+      "issue": "https://github.com/kenn-io/msgvault/issues/1221",
+      "pr": "https://github.com/kenn-io/msgvault/pull/1222",
+      "pr_state": "draft"
     }
   ]
 }
 ```
+
+## Verified web dependency contribution (2026-10-11)
+
+MV-P09 is separated from the mixed dependency history in da4f187 so the
+remaining Go/docs/PCRE2 work is not falsely covered. Existing upstream
+issue #1221 is linked by draft PR #1222 with exact head
+fbed48cf7562a01b17a48b281753bb98abebd698. The contribution uses the
+existing genuine GitHub fork X1pheR/msgvault-1; X1pheR/msgvault is the
+independent maintained product and is not in the upstream fork network.
+The diff changes only web/package.json and web/bun.lock on official main
+6268a0d6. GitHub readback verifies exact fork, branch, issue link and SHA.
+
+All 155 web unit-test files (2483 tests), generated-client checks, Svelte
+checks, kit-ui checks and the production web build passed on Node24/Bun1.3.14.
+Successful suites were retained across bounded runs; two large-payload
+sanitizer/inline-image cases required a 30-second timeout on the 2-CPU host
+and then passed unchanged. No product assertions were weakened. The diff
+was scrubbed for private downstream names/paths before publication.
+Exact file hashes and per-suite receipts are in
+/srv/hypershell/reports/sdlc09-20261011/msgvault-web-1221-receipt.json.
+
+The PR remains draft, unmerged and unreleased. No maintained product
+source baseline, release or production runtime was advanced. MV-P05
+remains blocked until the remaining dependency scope converges.
 
 ## Upstream-first exit
 
