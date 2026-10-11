@@ -22,6 +22,21 @@ patch with unrelated MCP/product-specific changes. Resolve
 source identity with the maintainer, then prepare an upstream-native
 tested PR or a precise operator-approved blocked disposition.
 
+## gRPC upstream convergence — 2026-10-11
+
+Upstream issue #1218 is closed by merged PR #1220. The PR head is
+`ed991028884a148888778c87db39fae6caa7678b`; upstream main contains
+merge commit `6268a0d6`. GitHub read-back confirmed the exact go.mod and
+go.sum update to gRPC-Go v1.83.2 and the explicit Closes #1218 link.
+MV-P08 separates this dependency correction from the remaining MV-P05
+Go, frontend, documentation and runtime dependency changes.
+
+The latest observed official release is v0.21.0 (2026-10-02), before
+the PR merge on 2026-10-11. No official release adoption, downstream
+patch removal, product release or production change is established.
+Retain the downstream dependency until a suitable immutable release
+passes the normal product acceptance gates.
+
 ## Machine-readable patch register
 
 This is a source-history-based initial logical patch inventory and must be reconciled against an exact upstream tree, current GitHub issue/PR state and the canonical product contract before it can be called exhaustive or compliant. The missing upstream links intentionally fail the current SDLC policy. Product-specific operational changes should move out of the fork when possible. No divergence ADR is approved, and these records do not grandfather one.
@@ -84,7 +99,7 @@ This is a source-history-based initial logical patch inventory and must be recon
     {
       "id": "MV-P05",
       "kind": "upstream",
-      "scope": "Vulnerability and Go/PCRE2 runtime/toolchain dependency hardening",
+      "scope": "Remaining Go and PCRE2 dependency hardening, excluding separately tracked gRPC 1.83.2",
       "local_commits": [
         "da4f187",
         "e7b84d7",
@@ -121,6 +136,18 @@ This is a source-history-based initial logical patch inventory and must be recon
       "checked_on": "2026-10-10",
       "issue": null,
       "pr": null
+    },
+    {
+      "id": "MV-P08",
+      "kind": "upstream",
+      "scope": "gRPC-Go 1.83.2 dependency correction accepted upstream",
+      "local_commits": [
+        "e7b84d7"
+      ],
+      "checked_on": "2026-10-11",
+      "issue": "https://github.com/kenn-io/msgvault/issues/1218",
+      "pr": "https://github.com/kenn-io/msgvault/pull/1220",
+      "pr_state": "merged"
     }
   ]
 }
