@@ -99,7 +99,7 @@ This is a source-history-based initial logical patch inventory and must be recon
     {
       "id": "MV-P05",
       "kind": "upstream",
-      "scope": "Remaining Go, documentation Python and runtime PCRE2 dependency hardening; excludes gRPC MV-P08 and web dependencies MV-P09",
+      "scope": "Remaining Go and runtime PCRE2 dependency hardening; excludes gRPC MV-P08, web dependencies MV-P09 and documentation dependency MV-P10",
       "local_commits": [
         "da4f187",
         "e7b84d7",
@@ -160,6 +160,19 @@ This is a source-history-based initial logical patch inventory and must be recon
       "issue": "https://github.com/kenn-io/msgvault/issues/1221",
       "pr": "https://github.com/kenn-io/msgvault/pull/1222",
       "pr_state": "draft"
+    },
+    {
+      "id": "MV-P10",
+      "kind": "upstream",
+      "scope": "Documentation pymdown-extensions lock update to 11.0.1 with unchanged Zensical constraints",
+      "local_commits": [
+        "f063ec7",
+        "02c9d30"
+      ],
+      "checked_on": "2026-10-13",
+      "issue": "https://github.com/kenn-io/msgvault/issues/1264",
+      "pr": "https://github.com/kenn-io/msgvault/pull/1265",
+      "pr_state": "draft"
     }
   ]
 }
@@ -192,3 +205,7 @@ remains blocked until the remaining dependency scope converges.
 ## Upstream-first exit
 
 For each patch, first check whether the official current upstream source or an existing issue and PR already cover its behavior. Do not open duplicate contributions. Preserve one logical patch for an iterative fix. Publish only a tested upstream-compatible contribution after the repository's established acceptance gates. Once the exact patch merges, require inclusion in an immutable official release and candidate regression evidence before removing the downstream delta. An approved intentional divergence requires a separate operator decision and accepted exact-scope product ADR. End fork maintenance only after release adoption, desired state, rollback readiness, live acceptance and explicit retirement gates. No automatic production or database migration is authorized by this register.
+
+## Documentation dependency contribution — 2026-10-13
+
+MV-P10 separates the retained documentation dependency from the still-blocked Go/PCRE2 remainder of MV-P05. Official issue #1264 is closed by the proposed draft PR #1265, exact contribution head `be488ada58099b2450ebfadf808c809c54c5b588` on official main `3c63f3a979b589c60e154f4b9ec6fdad272f3de3`. Only three lock-entry lines change pymdown-extensions 10.21.3 to 11.0.1 and matching artifact metadata; Zensical remains 0.0.45. `uv lock --check`, `uv sync --frozen` and canonical `make docs-check` passed, including the actual Zensical/site build, built-site validator, validator self-tests and redirect check. Disposable verifier uses uv/Python3.12 image digest `sha256:73f4c257f96061b7c38e1a14416971f41d980fd3cd2837e5e1671140dc4affb9`. Independent static review passed. Evidence: `/srv/hypershell/reports/sdlc09-20261011/msgvault-docs-1264-acceptance.log`, run `run-20261013T224442923031Z-025f2f1fbcbb`; managed publication `run-20261013T224621727034Z-e6d5cdfcf988`; official PR readback confirmed exact SHA, open/draft and Closes #1264. No upstream merge, release adoption or product deployment is claimed.
