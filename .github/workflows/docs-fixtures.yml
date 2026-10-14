@@ -3,8 +3,8 @@ name: Documentation fixture evidence
 permissions:
   contents: read
 
-# Upstream static screenshots postdate the retained v0.19.3 UI. Normal runs
-# compare strictly against reviewed downstream captures; reference capture is
+# Normal runs compare strictly against reviewed v0.21 downstream captures;
+# reference capture is
 # an explicit dispatch-only operation and does not constitute comparison acceptance.
 env:
   MSGVAULT_DOCS_USE_LOCAL_ASSET_BRANCHES: "true"
@@ -55,7 +55,7 @@ jobs:
       - name: Fetch locked upstream fixture, reviewed downstream references and generated assets
         run: |
           git fetch --no-tags https://github.com/kenn-io/msgvault.git +refs/heads/docs-fixtures:refs/remotes/upstream/docs-fixtures
-          git fetch --no-tags --depth=1 https://github.com/X1pheR/msgvault.git +6d0370369be1d4508f8b94fac3073113a0aa29e5:refs/heads/docs-assets
+          git fetch --no-tags --depth=1 https://github.com/X1pheR/msgvault.git +bbeb31cf42e65c743e2184fcbbbd547bf33e6a11:refs/heads/docs-assets
           git fetch --no-tags --depth=1 https://github.com/kenn-io/msgvault.git +dedad6fe03b2b6d533011e970921ab303a951c80:refs/heads/docs-generated-assets
 
       - name: Install frontend dependencies
@@ -118,7 +118,7 @@ jobs:
       - name: Fetch locked upstream fixture, reviewed downstream references and generated assets
         run: |
           git fetch --no-tags https://github.com/kenn-io/msgvault.git +refs/heads/docs-fixtures:refs/remotes/upstream/docs-fixtures
-          git fetch --no-tags --depth=1 https://github.com/X1pheR/msgvault.git +6d0370369be1d4508f8b94fac3073113a0aa29e5:refs/heads/docs-assets
+          git fetch --no-tags --depth=1 https://github.com/X1pheR/msgvault.git +bbeb31cf42e65c743e2184fcbbbd547bf33e6a11:refs/heads/docs-assets
           git fetch --no-tags --depth=1 https://github.com/kenn-io/msgvault.git +dedad6fe03b2b6d533011e970921ab303a951c80:refs/heads/docs-generated-assets
 
       - name: Install frontend dependencies

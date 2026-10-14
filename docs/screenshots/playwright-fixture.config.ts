@@ -1,5 +1,6 @@
 const baseURL = process.env.MSGVAULT_DOCS_BASE_URL;
 if (!baseURL) throw new Error('MSGVAULT_DOCS_BASE_URL is required');
+const compareDir = process.env.MSGVAULT_DOCS_SCREENSHOT_COMPARE_DIR;
 
 const config = {
   testDir: '../../web/tests',
@@ -17,5 +18,11 @@ const config = {
     video: 'retain-on-failure'
   }
 };
+
+if (compareDir) {
+  // The capture test compares a single screenshot buffer with the hydrated
+  // published asset and then writes that same buffer to its output directory.
+  config.snapshotPathTemplate = `${compareDir}/{arg}{ext}`;
+}
 
 export default config;

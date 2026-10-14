@@ -6,6 +6,8 @@ import { setKitTheme, setTemporaryDensity } from './kit-ui';
 
 const outputDir = process.env.MSGVAULT_DOCS_SCREENSHOT_OUTPUT ?? '';
 const platform = process.env.MSGVAULT_DOCS_SCREENSHOT_PLATFORM ?? 'darwin';
+const compareDir = process.env.MSGVAULT_DOCS_SCREENSHOT_COMPARE_DIR;
+const comparePublishedAssets = Boolean(compareDir);
 
 const exploreURL = (workspace: 'everything' | 'relationships') =>
   `/?workspace=${workspace}`;
@@ -18,13 +20,27 @@ async function waitForOverview(page: import('@playwright/test').Page) {
   return grid;
 }
 
-async function captureEvidence(page: import('@playwright/test').Page, filename: string) {
-  await captureScreenshot(page, path.join(outputDir, filename));
+async function captureEvidence(
+  page: import('@playwright/test').Page,
+  filename: string,
+  compareOptions?: { maxDiffPixelRatio?: number }
+) {
+  await captureScreenshot(
+    page,
+    path.join(outputDir, filename),
+    comparePublishedAssets
+      ? async (screenshot) => {
+          const options = compareOptions ?? (platform === 'darwin' ? { maxDiffPixelRatio: 0.005 } : { maxDiffPixels: 100 });
+          await expect(screenshot).toMatchSnapshot(filename, options);
+        }
+      : undefined
+  );
 }
 
-test('writes the final stable screenshot buffer', async ({}, testInfo) => {
+test('writes the exact screenshot buffer supplied to the comparer', async ({}, testInfo) => {
   const frames = [Buffer.from('transient screenshot'), Buffer.from('stable screenshot'), Buffer.from('stable screenshot')];
   let screenshotCalls = 0;
+  let comparedScreenshot: Buffer | undefined;
   const screenshotOptions: ScreenshotOptions[] = [];
   const outputPath = path.join(testInfo.outputDir, 'exact-buffer.png');
   await mkdir(testInfo.outputDir, { recursive: true });
@@ -37,7 +53,10 @@ test('writes the final stable screenshot buffer', async ({}, testInfo) => {
         return frames.shift()!;
       }
     },
-    outputPath
+    outputPath,
+    async (buffer) => {
+      comparedScreenshot = buffer;
+    }
   );
 
   expect(screenshotCalls).toBe(3);
@@ -46,6 +65,7 @@ test('writes the final stable screenshot buffer', async ({}, testInfo) => {
     { fullPage: false, animations: 'disabled', caret: 'hide' },
     { fullPage: false, animations: 'disabled', caret: 'hide' }
   ]);
+  expect(comparedScreenshot).toEqual(Buffer.from('stable screenshot'));
   expect(await readFile(outputPath)).toEqual(Buffer.from('stable screenshot'));
 });
 
@@ -100,7 +120,7 @@ test.describe('documentation fixture capture', () => {
         }
         await expect(year).toHaveText('2001');
         await expect(calendar.getByText('No interactions in 2001.')).toHaveCount(0);
-        await captureEvidence(page, filename);
+        await captureEvidence(page, filename, platform === 'darwin' ? { maxDiffPixelRatio: 0.02 } : undefined);
       }
     }
   });
