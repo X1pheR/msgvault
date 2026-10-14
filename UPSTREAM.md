@@ -112,7 +112,7 @@ This is a source-history-based initial logical patch inventory and must be recon
     {
       "id": "MV-P06",
       "kind": "upstream",
-      "scope": "Release and CI contract adaptation with trusted cancellation and verifier parity",
+      "scope": "Remaining release and CI contract adaptation with trusted cancellation and verifier parity; portable fixture hydration split into MV-P13",
       "local_commits": [
         "1cf1134",
         "43516c0",
@@ -120,7 +120,7 @@ This is a source-history-based initial logical patch inventory and must be recon
         "d9f6209",
         "1c7011b"
       ],
-      "checked_on": "2026-10-10",
+      "checked_on": "2026-10-14",
       "issue": null,
       "pr": null
     },
@@ -199,6 +199,19 @@ This is a source-history-based initial logical patch inventory and must be recon
       "pr": "https://github.com/kenn-io/msgvault/pull/1275",
       "pr_state": "open",
       "pr_head_sha": "0c390700f3673bf63951f96f1a7099ed1648957a"
+    },
+    {
+      "id": "MV-P13",
+      "kind": "upstream",
+      "scope": "Hydrate the locked upstream documentation fixture independently of fork origin while preserving ancestry and review/digest checks",
+      "local_commits": [
+        "d9f6209"
+      ],
+      "checked_on": "2026-10-14",
+      "issue": "https://github.com/kenn-io/msgvault/issues/1276",
+      "pr": "https://github.com/kenn-io/msgvault/pull/1277",
+      "pr_state": "open",
+      "pr_head_sha": "4902082172c8bedff3339740a20f23bc7171e624"
     }
   ]
 }
@@ -270,3 +283,12 @@ Accepted native evidence: full go vet005925-8a8d; docs235829-e49cb; parser/store
 The legacy API test package contains62,917 unrelated test lines; compiling it exceeds bounded native worker memory, including1700MiB013920-86c2 with cgroup OOM. Full make lint-ci helper030120-1e6e also exceeds memory/deadline; broad source-only analysis030503-63c5 ended137 without final cgroup proof. These are failures, not full-green claims. Exact changed-scope native defaultlinter/helper and executable owning regressions are accepted; no rules/assertions were disabled. This remains a draft upstream contribution, not downstream release or production acceptance.
 
 Current product register: twelve retained logical groups, five complete active/merged issue/PR pairs, seven structurally nonconformant groups. The extra logical read slice preserves all retained capture scope. No downstream patch removal, own release or production adoption is claimed.
+
+
+## Verified upstream fixture hydration — 2026-10-14
+
+MV-P13 separates the portable hydration correction from MV-P06's mixed historical d9f6209 CI/toolchain work. Issue #1276 and draft PR #1277 are verified open at exact head 4902082172c8bedff3339740a20f23bc7171e624, true fork X1pheR/msgvault-1, main base and Closes #1276. Only the controlled fixture fetch changes from origin to the official kenn-io/msgvault URL and separate upstream tracking ref. Locked branch/commit ancestry, manual-review validation, archive/manifest SHA256 and local/offline behavior are preserved. MV-P04 reviewed browser-reference/capture workflow and the remaining MV-P06 release/verifier scope remain unpaired.
+
+A real local-Git regression uses existing reviewed synthetic fixture builders, an empty fork origin and an originless checkout. Network is excluded with file-only protocols and local URL rewriting; digest, branch ref and unchanged origin checks remain strict. Valid RED041015-57f262b57620 failed only missing fixture ref/missingorigin; GREEN041043-9fa33be714fa passed both. Independent source/test review identified ambient fixture-lock isolation; separate fixing context adds the supported --lock flag only, fixtureSHA c7fd1b3dd467be8ce305484627e21b92dd54c321cd4bf6585b75bd5568e27ef0, sourceSHA c278863ca299d43d2a2ed877b77902ec1b4265b39b58b46db07f39ff59420d0f. Incremental review passes. Exact canonical docs-fixture-test Python recipe passes31tests and a separate invalid-ambient-lock regression041226-d3e93d4a5fd7; Bash syntax/whitespace pass. Host make is absent, so failed wrapper041114-ea29 is retained as failure and the unchanged single-command Makefile recipe was run directly. No new checker or verifier was added.
+
+Managed normalization041244-36486; public added-line boundary and verifiedcommit041304-e2ee0f9ad878; exact managedpublication041313-016cb03e6d02 and typedGitHubhead/link pass. Logs msgvault-fixture-origin-1276-*.log are in the existing report directory. Current register has13retained logicalgroups,6complete active/merged pairs and7nonconformant groups. No downstream adoption/release/production change is claimed.
