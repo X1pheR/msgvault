@@ -99,14 +99,13 @@ This is a source-history-based initial logical patch inventory and must be recon
     {
       "id": "MV-P05",
       "kind": "upstream",
-      "scope": "Remaining Go and runtime PCRE2 dependency hardening; excludes gRPC MV-P08, web dependencies MV-P09 and documentation dependency MV-P10",
+      "scope": "Remaining Go dependency and toolchain hardening; excludes gRPC MV-P08, web dependencies MV-P09, documentation dependency MV-P10 and runtime PCRE2 MV-P12",
       "local_commits": [
-        "da4f187",
         "e7b84d7",
         "f063ec7",
         "02c9d30"
       ],
-      "checked_on": "2026-10-10",
+      "checked_on": "2026-10-14",
       "issue": null,
       "pr": null
     },
@@ -142,6 +141,7 @@ This is a source-history-based initial logical patch inventory and must be recon
       "kind": "upstream",
       "scope": "gRPC-Go 1.83.2 dependency correction accepted upstream",
       "local_commits": [
+        "da4f187",
         "e7b84d7"
       ],
       "checked_on": "2026-10-11",
@@ -172,6 +172,18 @@ This is a source-history-based initial logical patch inventory and must be recon
       "checked_on": "2026-10-13",
       "issue": "https://github.com/kenn-io/msgvault/issues/1264",
       "pr": "https://github.com/kenn-io/msgvault/pull/1265",
+      "pr_state": "draft"
+    },
+    {
+      "id": "MV-P12",
+      "kind": "upstream",
+      "scope": "Explicit refresh of the existing runtime PCRE2 library from the current Debian security candidate",
+      "local_commits": [
+        "02c9d30"
+      ],
+      "checked_on": "2026-10-14",
+      "issue": "https://github.com/kenn-io/msgvault/issues/1269",
+      "pr": "https://github.com/kenn-io/msgvault/pull/1270",
       "pr_state": "draft"
     }
   ]
@@ -222,3 +234,12 @@ Requested decision: retain this precisely bounded product-owned distribution ada
 Before an approved disposition can clear a gate, the operator-owned product ADR must identify the exact retained scope, rationale, owner, acceptance evidence and review/exit trigger. Proposed review trigger: the next suitable official upstream release or2026-11-14, whichever comes first. Exit requires equivalent released functionality and distribution, accepted source/runtime/consumer parity, rollback readiness and the existing explicit production/retirement acceptance. This proposal authorizes none of those transitions and approves no missing contribution.
 
 The existing shared repository/release lifecycle invokes the single canonical SDLC checker before managed tag/publication/recovery transitions. Direct public workflow integration remains incomplete: the checker source is private and repository-scoped public GitHub tokens cannot read it. No production credentials, privileged public runner, second checker or extra service was introduced.
+
+
+## Runtime PCRE2 contribution — 2026-10-14
+
+MV-P12 separates only the explicit runtime PCRE2 installation from the Go toolchain portion of historical commit `02c9d30`. Upstream issue [#1269](https://github.com/kenn-io/msgvault/issues/1269) and draft PR [#1270](https://github.com/kenn-io/msgvault/pull/1270) are read-back verified at exact head `8e585662fbf0f956c26ec9807662d3c15dd8126d`, from the actual contribution fork `X1pheR/msgvault-1`, against official source `3c63f3a979b589c60e154f4b9ec6fdad272f3de3`. The PR closes the exact issue and changes only one Dockerfile runtime dependency line.
+
+The pinned official Debian base contains PCRE2 `10.42-1`. The unchanged runtime package transaction retains it; refreshed APT metadata exposes `10.42-1+deb12u2` from Bookworm Security. This actual package-layer comparison failed before implementation and passed after explicit installation. All existing runtime packages remain installed and a real PCRE2-backed grep operation passes. Independent source/security review passed. Evidence: `msgvault-runtime-pcre2-current-red.log` / `run-20261014T004917970393Z-d02c31c655ee`, `msgvault-runtime-pcre2-green.log` / `run-20261014T005042728552Z-74a7b2befb0b`; accepted package-layer image `sha256:d887fd7785526ad7a50fe71d50fae667b77a5be367b71b279a267326a11aca9a`; publication `run-20261014T005257965948Z-5941533cf526`. This evidence covers the changed native runtime package layer; it does not claim a complete release-image build or production adoption. An earlier metadata-free baseline comparison cannot prove candidate currency and is not accepted RED evidence.
+
+MV-P05 still owns the independent retained Go dependency/toolchain scope. Official v0.21.0 source already uses Go 1.27.1 and newer x/crypto, x/net, x/sys and x/tools versions; this is source comparison, not accepted downstream adoption or patch retirement. No duplicate contribution for already supported dependency versions is justified. The PCRE2 pair does not waive that remaining source convergence or any other patch group. There are now eleven retained groups, four complete active/merged issue/PR pairs and seven nonconformant groups in this product. No downstream release or production state changed.
