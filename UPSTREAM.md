@@ -73,12 +73,12 @@ This is a source-history-based initial logical patch inventory and must be recon
     {
       "id": "MV-P03",
       "kind": "upstream",
-      "scope": "Mirrored Discord source provenance and sanitized read-only message provenance",
+      "scope": "Mirrored Discord source capture and provenance persistence; safe message-read projection split into MV-P11",
       "local_commits": [
         "16ef0bd",
         "ee363a4"
       ],
-      "checked_on": "2026-10-10",
+      "checked_on": "2026-10-14",
       "issue": null,
       "pr": null
     },
@@ -185,6 +185,20 @@ This is a source-history-based initial logical patch inventory and must be recon
       "issue": "https://github.com/kenn-io/msgvault/issues/1269",
       "pr": "https://github.com/kenn-io/msgvault/pull/1270",
       "pr_state": "draft"
+    },
+    {
+      "id": "MV-P11",
+      "kind": "upstream",
+      "scope": "Allowlisted optional source provenance in SQLite/query, HTTP/MCP and daemon message-read paths with generated API/client parity",
+      "local_commits": [
+        "16ef0bd",
+        "ee363a4"
+      ],
+      "checked_on": "2026-10-14",
+      "issue": "https://github.com/kenn-io/msgvault/issues/1268",
+      "pr": "https://github.com/kenn-io/msgvault/pull/1275",
+      "pr_state": "open",
+      "pr_head_sha": "0c390700f3673bf63951f96f1a7099ed1648957a"
     }
   ]
 }
@@ -243,3 +257,16 @@ MV-P12 separates only the explicit runtime PCRE2 installation from the Go toolch
 The pinned official Debian base contains PCRE2 `10.42-1`. The unchanged runtime package transaction retains it; refreshed APT metadata exposes `10.42-1+deb12u2` from Bookworm Security. This actual package-layer comparison failed before implementation and passed after explicit installation. All existing runtime packages remain installed and a real PCRE2-backed grep operation passes. Independent source/security review passed. Evidence: `msgvault-runtime-pcre2-current-red.log` / `run-20261014T004917970393Z-d02c31c655ee`, `msgvault-runtime-pcre2-green.log` / `run-20261014T005042728552Z-74a7b2befb0b`; accepted package-layer image `sha256:d887fd7785526ad7a50fe71d50fae667b77a5be367b71b279a267326a11aca9a`; publication `run-20261014T005257965948Z-5941533cf526`. This evidence covers the changed native runtime package layer; it does not claim a complete release-image build or production adoption. An earlier metadata-free baseline comparison cannot prove candidate currency and is not accepted RED evidence.
 
 MV-P05 still owns the independent retained Go dependency/toolchain scope. Official v0.21.0 source already uses Go 1.27.1 and newer x/crypto, x/net, x/sys and x/tools versions; this is source comparison, not accepted downstream adoption or patch retirement. No duplicate contribution for already supported dependency versions is justified. The PCRE2 pair does not waive that remaining source convergence or any other patch group. There are now eleven retained groups, four complete active/merged issue/PR pairs and seven nonconformant groups in this product. No downstream release or production state changed.
+
+
+## Verified safe read-only source provenance contribution — 2026-10-14
+
+MV-P11 separates only sanitized message-read projection from MV-P03 mirror capture. Issue #1268 and draft PR #1275 are verified open at exact head 0c390700f3673bf63951f96f1a7099ed1648957a in the genuine contribution fork X1pheR/msgvault-1, with Closes #1268. The contribution source base is 3c63f3a979b589c60e154f4b9ec6fdad272f3de3; live PR main base at publication is 0b0b8c851599a3d1f1e11e5c68a074c04f2a87c3. MV-P03 still owns source capture and remains unlinked; this narrower pair does not cover importer identity, retention or capture.
+
+The parser publishes exactly kind, repository, repository_url, commit, archive_paths, author_identity and lifecycle_authority from an existing mirror_provenance object, plus optional source_conversation_id. Unknown, malformed, empty and unknown-only objects are omitted. Store/query, HTTP/MCP and daemon adapters expose the same optional typed projection and copied archive paths. It reads no source files or network and grants no authorization. OpenAPI3.15 and generated client/schema parity are accepted. Production/docs and all fixture changes pass independent review.
+
+Accepted native evidence: full go vet005925-8a8d; docs235829-e49cb; parser/store/query/MCP/daemon/client/codegenfix003501-242b and corrected DuckDB003914-cdfc; affected MCP lint/helper/test033248-5db4; parser/query/store lint/helper/tests035215-28cb; API selected-production-file/new-fixture native helper, pinned76-linter/plugin and three realSQLite/engine/copy regressions040107-c59dd0d82a46. Final API fixture SHA256 c96b3cedfd622946201bc56001b5d17b12e6d3de0ef479343456e9db8457b20a. Canonical regeneration040305-256141e10fd2 is byte-identical to staged artifacts; commit040426-025e9a1edd8d and post-commit make api-check040441-ed56bcda272b pass. Managed source modes restored040507-9d2c7; public added-line scrub passes; exact managed publication040522-bd309e1ae02d and typed PR head/link readback pass. All named logs remain in the existing SDLC-09 report directory.
+
+The legacy API test package contains62,917 unrelated test lines; compiling it exceeds bounded native worker memory, including1700MiB013920-86c2 with cgroup OOM. Full make lint-ci helper030120-1e6e also exceeds memory/deadline; broad source-only analysis030503-63c5 ended137 without final cgroup proof. These are failures, not full-green claims. Exact changed-scope native defaultlinter/helper and executable owning regressions are accepted; no rules/assertions were disabled. This remains a draft upstream contribution, not downstream release or production acceptance.
+
+Current product register: twelve retained logical groups, five complete active/merged issue/PR pairs, seven structurally nonconformant groups. The extra logical read slice preserves all retained capture scope. No downstream patch removal, own release or production adoption is claimed.
