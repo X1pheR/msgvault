@@ -810,6 +810,7 @@ export * from "./source";
 export * from "./sourceCount";
 export * from "./sourceIdentitiesResponse";
 export * from "./sourceIdentityResponse";
+export * from "./sourceProvenanceResponse";
 export * from "./sourceReference";
 export * from "./sourcesRequest";
 export * from "./sourceStatus";
