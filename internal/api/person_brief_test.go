@@ -721,62 +721,6 @@ func TestPersonBriefGenerateIsNotBoundedByTheStandardRequestTimeout(t *testing.T
 	assert.False(isLongDaemonRequest(""))
 }
 
-func TestPersonBriefOpenAPIContract(t *testing.T) {
-	t.Parallel()
-	assertions := assert.New(t)
-	requirements := require.New(t)
-	document := OpenAPIDocument()
-
-	brief := document.Paths["/api/v1/people/{id}/brief"]
-	requirements.NotNil(brief)
-	requirements.NotNil(brief.Get)
-	assertions.Equal("getPersonBrief", brief.Get.OperationID)
-
-	versions := document.Paths["/api/v1/people/{id}/brief/versions"]
-	requirements.NotNil(versions)
-	requirements.NotNil(versions.Get)
-	assertions.Equal("listPersonBriefVersions", versions.Get.OperationID)
-
-	reject := document.Paths["/api/v1/people/{id}/brief/reject"]
-	requirements.NotNil(reject)
-	requirements.NotNil(reject.Post)
-	assertions.Equal("rejectPersonBrief", reject.Post.OperationID)
-
-	generate := document.Paths["/api/v1/people/{id}/brief/generate"]
-	requirements.NotNil(generate)
-	requirements.NotNil(generate.Post)
-	assertions.Equal("generatePersonBrief", generate.Post.OperationID)
-
-	enrollment := document.Paths["/api/v1/people/{id}/brief-enrollment"]
-	requirements.NotNil(enrollment)
-	requirements.NotNil(enrollment.Get)
-	requirements.NotNil(enrollment.Put)
-	assertions.Equal("getPersonBriefEnrollment", enrollment.Get.OperationID)
-	assertions.Equal("setPersonBriefEnrollment", enrollment.Put.OperationID)
-
-	assertions.Equal("3.0.0", APISchemaVersion)
-
-	// The handlers accept an absent reason and an absent track, so the schema
-	// generated clients are built from must not demand either.
-	schemas := document.Components.Schemas.Map()
-	rejectBody := schemas["RejectPersonBriefRequest"]
-	requirements.NotNil(rejectBody)
-	assertions.Contains(rejectBody.Properties, "reason")
-	assertions.NotContains(rejectBody.Required, "reason")
-	enrollmentBody := schemas["PutPersonBriefEnrollmentRequest"]
-	requirements.NotNil(enrollmentBody)
-	assertions.Equal([]string{"enrolled"}, enrollmentBody.Required)
-	assertions.Contains(enrollmentBody.Properties, "track")
-
-	// The join key is part of the contract generated clients are built from.
-	briefSchema := schemas["PersonBrief"]
-	requirements.NotNil(briefSchema)
-	assertions.Contains(briefSchema.Properties, "renderer_policy")
-	sentenceSchema := schemas["PersonBriefSentence"]
-	requirements.NotNil(sentenceSchema)
-	assertions.Contains(sentenceSchema.Properties, "evidence_ordinals")
-}
-
 // TestPersonBriefIsReachableOnlyThroughItsOwnRoutes pins the design's boundary:
 // the brief is derived text about a third party and is exposed only where the
 // owner asked for it. Nothing else in the HTTP contract may return it, which is

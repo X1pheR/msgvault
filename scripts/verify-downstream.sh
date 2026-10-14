@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+verify_memory_mb="${MSGVAULT_VERIFY_MEMORY_MB:-2048}"
+if [[ ! "$verify_memory_mb" =~ ^[0-9]{3,4}$ ]] ||
+  ((10#$verify_memory_mb < 512 || 10#$verify_memory_mb > 2048)); then
+  echo "MSGVAULT_VERIFY_MEMORY_MB must be an integer from 512 to 2048" >&2
+  exit 2
+fi
+
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 toolchain="golang:1.27.1-bookworm@sha256:69a7b9788769bec032d238959b61854e9ae87f57be9029ec04e9885fabf99195"
 
@@ -9,8 +16,23 @@ build_cache="msgvault-downstream-go-build-cache"
 docker volume create "$mod_cache" >/dev/null
 docker volume create "$build_cache" >/dev/null
 
-docker run --rm \
-  --cpus=2 --memory=2g --memory-swap=2g --pids-limit=128 --env GOMAXPROCS=2 \
+verify_state=$(mktemp -d /tmp/msgvault-downstream-verify.XXXXXX)
+cleanup_verify() {
+  local cid
+  if [[ -s "$verify_state/container.cid" ]]; then
+    cid=$(<"$verify_state/container.cid")
+    if [[ "$cid" =~ ^[0-9a-f]{64}$ ]]; then
+      docker inspect --format 'Verifier OOMKilled={{.State.OOMKilled}} ExitCode={{.State.ExitCode}}' "$cid" || true
+      docker rm -f "$cid" >/dev/null 2>&1 || true
+    fi
+  fi
+  rm -rf -- "$verify_state"
+}
+trap cleanup_verify EXIT
+printf 'Verifier container receipt: %s\n' "$verify_state/container.cid"
+
+docker run --cidfile "$verify_state/container.cid" \
+  --cpus=2 --memory="${verify_memory_mb}m" --memory-swap="${verify_memory_mb}m" --pids-limit=128 --env GOMAXPROCS=2 \
   --mount "type=bind,src=$root,dst=/src,readonly" \
   --mount "type=volume,src=$mod_cache,dst=/go/pkg/mod" \
   --mount "type=volume,src=$build_cache,dst=/root/.cache/go-build" \
@@ -30,6 +52,7 @@ docker run --rm \
       internal/api/cli_handlers.go
       internal/api/handlers.go
       internal/api/handlers_test.go
+      internal/api/downstream_readpaths_test.go
       internal/api/openapi.go
       internal/api/openapi_test.go
       internal/api/source_provenance.go
@@ -73,16 +96,26 @@ docker run --rm \
 
     go vet -tags "fts5 sqlite_vec" "${packages[@]}"
 
-    go test -count=1 -tags "fts5 sqlite_vec" ./internal/discord -run "^(TestSDDDLE001LocalObservationSourceTypeAndMessageType|TestSDDDLE002003SourceIdentifierAndScopeValidation|TestImportObservationsArchivesLocalDiscordFactsWithoutProviderAPI|TestSDDDLE005AccountScopedDMAndGroupDMConversationTypes|TestImportObservationsInterruptedReplayConverges|TestImportObservationsRejectsMalformedInput|TestSDDDLE003004RejectsMissingOrMismatchedEmbeddedSourceIdentity)$"
-    go test -count=1 -tags "fts5 sqlite_vec" ./cmd/msgvault/cmd -run "^(TestImportDiscordObservationsRoutesThroughDaemonCLIRunner|TestSDDDLE001NativeDiscordResolverExcludesLocalObservationSources|TestSDDDLE009ApplyMCPReadOnlyDropsStatefulCapability|TestSDDDLE009MCPCommandExposesReadOnlyFlag)$"
-    go test -count=1 -tags "fts5 sqlite_vec" ./internal/sourceprovenance
-    go test -count=1 -tags "fts5 sqlite_vec" ./internal/api -run "^(TestHandleCLIRunBackupSubcommandAdmission|TestMessageDetailPublishesSafeSourceProvenance|TestOpenAPIDocumentUsesAPISchemaVersion)$"
-    go test -count=1 -tags "fts5 sqlite_vec" ./internal/daemonclient -run "^TestEngineGetMessage"
-    go test -count=1 -tags "fts5 sqlite_vec" ./internal/mcp -run "^TestSDDDLE009ReadOnlyServeOptionsOmitStatefulTools$"
-    go test -count=1 -tags "fts5 sqlite_vec" ./internal/store -run "^TestSDDDLE013DiscordLocalExportKeepsDiscordParentAndAuthorSemantics$"
+    # Bound compiler/linker memory only; test processes retain default runtime GC settings.
+    go test -toolexec="env GOGC=30 GOMEMLIMIT=768MiB" -count=1 -tags "fts5 sqlite_vec" ./internal/discord -run "^(TestSDDDLE001LocalObservationSourceTypeAndMessageType|TestSDDDLE002003SourceIdentifierAndScopeValidation|TestImportObservationsArchivesLocalDiscordFactsWithoutProviderAPI|TestSDDDLE005AccountScopedDMAndGroupDMConversationTypes|TestImportObservationsInterruptedReplayConverges|TestImportObservationsRejectsMalformedInput|TestSDDDLE003004RejectsMissingOrMismatchedEmbeddedSourceIdentity)$"
+    go test -toolexec="env GOGC=30 GOMEMLIMIT=768MiB" -count=1 -tags "fts5 sqlite_vec" ./cmd/msgvault/cmd -run "^(TestImportDiscordObservationsRoutesThroughDaemonCLIRunner|TestSDDDLE001NativeDiscordResolverExcludesLocalObservationSources|TestSDDDLE009ApplyMCPReadOnlyDropsStatefulCapability|TestSDDDLE009MCPCommandExposesReadOnlyFlag)$"
+    go test -toolexec="env GOGC=30 GOMEMLIMIT=768MiB" -count=1 -tags "fts5 sqlite_vec" ./internal/sourceprovenance
+    # Compile all native API production sources and the unchanged selected fixtures.
+    # Full-package vet above still checks every upstream test file.
+    mapfile -t api_sources < <(go list -tags "fts5 sqlite_vec" -f "{{range .GoFiles}}{{println .}}{{end}}{{range .CgoFiles}}{{println .}}{{end}}" ./internal/api)
+    test "${#api_sources[@]}" -gt 0
+    api_files=()
+    for source in "${api_sources[@]}"; do
+      api_files+=("internal/api/$source")
+    done
+    api_files+=(internal/api/downstream_readpaths_test.go)
+    go test -toolexec="env GOGC=30 GOMEMLIMIT=768MiB" -count=1 -tags "fts5 sqlite_vec" "${api_files[@]}" -run "^Test"
+    go test -toolexec="env GOGC=30 GOMEMLIMIT=768MiB" -count=1 -tags "fts5 sqlite_vec" ./internal/daemonclient -run "^TestEngineGetMessage"
+    go test -toolexec="env GOGC=30 GOMEMLIMIT=768MiB" -count=1 -tags "fts5 sqlite_vec" ./internal/mcp -run "^TestSDDDLE009ReadOnlyServeOptionsOmitStatefulTools$"
+    go test -toolexec="env GOGC=30 GOMEMLIMIT=768MiB" -count=1 -tags "fts5 sqlite_vec" ./internal/store -run "^TestSDDDLE013DiscordLocalExportKeepsDiscordParentAndAuthorSemantics$"
 
-    go test -count=1 -tags "fts5 sqlite_vec" ./internal/discord -run "^TestSDDDLE(017019|019|020|022)"
-    go test -count=1 -tags "fts5 sqlite_vec" ./cmd/msgvault/cmd -run "^TestSDDDLE019"
+    go test -toolexec="env GOGC=30 GOMEMLIMIT=768MiB" -count=1 -tags "fts5 sqlite_vec" ./internal/discord -run "^TestSDDDLE(017019|019|020|022)"
+    go test -toolexec="env GOGC=30 GOMEMLIMIT=768MiB" -count=1 -tags "fts5 sqlite_vec" ./cmd/msgvault/cmd -run "^TestSDDDLE019"
     build_dir=$(mktemp -d /tmp/msgvault-downstream-build.XXXXXX)
     trap "rm -rf \"$build_dir\"" EXIT
     CGO_ENABLED=1 go build \

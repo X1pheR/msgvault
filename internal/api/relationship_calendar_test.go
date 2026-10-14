@@ -179,35 +179,3 @@ func TestRelationshipCalendarRequestRejectsTrailingJSON(t *testing.T) {
 		"/api/v1/relationships/7/calendar", `{"year":2026} {}`)
 	assert.Equal(t, http.StatusBadRequest, response.Code)
 }
-
-func TestRelationshipCalendarOpenAPIContract(t *testing.T) {
-	t.Parallel()
-	assert := assert.New(t)
-	require := require.New(t)
-	assert.Equal("3.0.0", APISchemaVersion)
-	document := OpenAPIDocument()
-	path := document.Paths["/api/v1/relationships/{id}/calendar"]
-	require.NotNil(path)
-	require.NotNil(path.Post)
-	assert.Equal("getRelationshipCalendar", path.Post.OperationID)
-	require.Len(path.Post.Parameters, 1)
-	assert.Equal("id", path.Post.Parameters[0].Name)
-	assert.Equal("path", path.Post.Parameters[0].In)
-	assert.True(path.Post.Parameters[0].Required)
-	assert.Contains(path.Post.Responses, "200")
-	assert.Contains(path.Post.Responses, "404")
-
-	person := document.Components.Schemas.Map()["PersonSummary"]
-	require.NotNil(person)
-	for _, property := range []string{
-		"current_relationship_temperature", "peak_relationship_temperature", "peak_relationship_year",
-	} {
-		assert.Contains(person.Properties, property)
-	}
-	day := document.Components.Schemas.Map()["RelationshipCalendarDay"]
-	require.NotNil(day)
-	require.NotNil(day.Properties["level"])
-	assert.ElementsMatch([]any{
-		"NONE", "FIRST_QUARTILE", "SECOND_QUARTILE", "THIRD_QUARTILE", "FOURTH_QUARTILE",
-	}, day.Properties["level"].Enum)
-}

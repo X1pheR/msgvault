@@ -41,9 +41,7 @@ func TestSDDDLE019ReadOnlyHistoryConsumer(t *testing.T) {
 	_, err = discord.NewImporter(st, nil).ImportObservations(t.Context(), discord.ObservationImportOptions{SourceIdentifier: "700", Reader: &input})
 	require.NoError(err)
 	require.NoError(st.Close())
-	originalConfig := cfg
-	cfg = &config.Config{Data: config.DataConfig{DataDir: dir}}
-	t.Cleanup(func() { cfg = originalConfig })
+	cfg := &config.Config{Data: config.DataConfig{DataDir: dir}}
 	for _, tc := range []struct {
 		source, message string
 		count           int
@@ -51,6 +49,7 @@ func TestSDDDLE019ReadOnlyHistoryConsumer(t *testing.T) {
 		{"700", "900", 1}, {"700", "901", 0}, {"701", "900", 0},
 	} {
 		command := newDiscordLocalHistoryCmd()
+		command.SetContext(testInvocationContext(t.Context(), cfg, invocationOptions{}))
 		var output bytes.Buffer
 		command.SetOut(&output)
 		require.NoError(command.RunE(command, []string{tc.source, tc.message}))

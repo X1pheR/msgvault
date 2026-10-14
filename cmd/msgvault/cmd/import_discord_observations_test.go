@@ -17,10 +17,11 @@ func TestImportDiscordObservationsRoutesThroughDaemonCLIRunner(t *testing.T) {
 			"/imports/discord/events.jsonl",
 		}, req.Args)
 	}, `{"type":"complete"}`)
-	configureRemoteDaemonForTest(t, server.URL)
+	testCtx := configureRemoteDaemonForTest(t, server.URL)
 	t.Setenv(daemonCLISubprocessEnv, "")
 
 	cmd := newImportDiscordObservationsCmd(discordCommandDeps{})
+	cmd.SetContext(testCtx)
 	cmd.SetIn(strings.NewReader(""))
 	cmd.SetArgs([]string{
 		"/imports/discord/events.jsonl",

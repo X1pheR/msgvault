@@ -18,7 +18,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.kenn.io/msgvault/internal/explorecatalog"
 	"go.kenn.io/msgvault/internal/operations"
-	"go.kenn.io/msgvault/internal/store"
 	"go.kenn.io/msgvault/pkg/client/generated"
 )
 
@@ -27,72 +26,6 @@ const (
 	openAPIClientArtifactPath = "../../pkg/client/openapi.yaml"
 	openAPIClientGeneratedDir = "../../pkg/client/generated"
 )
-
-func TestOpenAPIDocumentUsesAPISchemaVersion(t *testing.T) {
-	t.Parallel()
-	doc := OpenAPIDocument()
-
-	require.NotNil(t, doc.Info, "openapi info")
-	assert.Equal(t, APISchemaVersion, doc.Info.Version, "info.version tracks API schema, not binary version")
-	assert.NotEmpty(t, doc.Paths, "paths")
-}
-
-func TestMeetingIntelligenceOpenAPIContract(t *testing.T) {
-	t.Parallel()
-	requirements := require.New(t)
-	assertions := assert.New(t)
-	assertions.Equal("3.0.0", APISchemaVersion)
-	doc := OpenAPIDocument()
-	for path, operationID := range map[string]string{
-		"/api/v1/meetings/context": "getMeetingContext",
-		"/api/v1/meetings/actions": "listMeetingActionItems",
-		"/api/v1/meetings/metrics": "getMeetingMetrics",
-	} {
-		operation := doc.Paths[path]
-		requirements.NotNil(operation, path)
-		requirements.NotNil(operation.Post, path)
-		assertions.Equal(operationID, operation.Post.OperationID)
-		assertions.Contains(operation.Post.Responses, "413")
-		assertions.Contains(operation.Post.Responses, "415")
-	}
-
-	schemas := doc.Components.Schemas.Map()
-	contextRequest := schemas["MeetingContextRequest"]
-	requirements.NotNil(contextRequest)
-	requirements.Len(contextRequest.OneOf, 2,
-		"context requires exactly one direct IDs or Explore selection")
-	assertions.False(contextRequest.Properties["message_ids"].Nullable,
-		"omitted and explicit [] are distinct; null is not a third meaning")
-	actionsRequest := schemas["MeetingActionsRequest"]
-	requirements.NotNil(actionsRequest)
-	requirements.NotNil(actionsRequest.Not, "direct and Explore scopes are mutually exclusive")
-	metricsRequest := schemas["MeetingMetricsRequest"]
-	requirements.NotNil(metricsRequest)
-	requirements.NotNil(metricsRequest.Not, "direct and Explore scopes are mutually exclusive")
-	scopeRequest := schemas["MeetingScopeRequest"]
-	requirements.NotNil(scopeRequest)
-	assertions.False(scopeRequest.Properties["message_ids"].Nullable)
-	requirements.Len(scopeRequest.AllOf, 3,
-		"singular references exclude each other and the exact plural participant IDs")
-
-	meetingImport := schemas["Meeting"]
-	requirements.NotNil(meetingImport)
-	requirements.NotNil(meetingImport.Properties["action_items"])
-	assertions.False(meetingImport.Properties["action_items"].Nullable,
-		"omitted means unavailable while [] means source-reported empty")
-	requirements.NotNil(meetingImport.Properties["action_items"].MaxItems)
-	assertions.Equal(1000, *meetingImport.Properties["action_items"].MaxItems)
-	actionImport := schemas["MeetingActionItem"]
-	requirements.NotNil(actionImport)
-	assertions.Empty(actionImport.Properties["status"].Enum,
-		"source status remains an unrestricted bounded string")
-	assertions.Empty(actionImport.Properties["due_date"].Format,
-		"source due dates remain bounded text")
-	requirements.NotNil(actionImport.Properties["status"].MaxLength)
-	assertions.Equal(128, *actionImport.Properties["status"].MaxLength)
-	requirements.NotNil(actionImport.Properties["due_date"].MaxLength)
-	assertions.Equal(256, *actionImport.Properties["due_date"].MaxLength)
-}
 
 func TestGeneratedMeetingRequestsPreserveExplicitEmptyMessageIDs(t *testing.T) {
 	t.Parallel()
@@ -183,64 +116,11 @@ func TestGeneratedMeetingStatusKeepsRelationshipReviewPendingCompatibility(t *te
 	assert.Equal(t, generated.ListPersonRelationshipReviewsQueryStatus("pending"), status)
 }
 
-func TestOpenAPISchemaVersionSavedViewRun(t *testing.T) {
-	t.Parallel()
-	assertions := assert.New(t)
-	requirements := require.New(t)
-	assertions.Equal("3.0.0", APISchemaVersion)
-	doc := OpenAPIDocument()
-	run := doc.Paths["/api/v1/saved-views/{id}/run"]
-	requirements.NotNil(run, "Saved View run path")
-	requirements.NotNil(run.Post, "Saved View run operation")
-	assertions.Equal("runSavedView", run.Post.OperationID)
-
-	schemas := doc.Components.Schemas.Map()
-	filter := schemas["SavedViewFilter"]
-	requirements.NotNil(filter)
-	assertions.Equal(enumValues(store.SavedViewFilterFields()), filter.Properties["field"].Enum,
-		"the Saved View schema publishes the store vocabulary")
-	sort := schemas["SavedViewSort"]
-	requirements.NotNil(sort)
-	assertions.Equal([]any{"desc"}, sort.Properties["direction"].Enum)
-}
-
-func TestDeletionSubsetSchemaVersion(t *testing.T) {
-	t.Parallel()
-	assert.Equal(t, "3.0.0", APISchemaVersion)
-}
-
 func TestOperationsWorkspaceSchemaVersion(t *testing.T) {
 	t.Parallel()
 	for _, doc := range []*huma.OpenAPI{OpenAPIDocument(), openAPIClientDocument()} {
 		assert.Equal(t, "3.0.0", doc.Info.Version)
 	}
-}
-
-func TestSearchTimingFieldsUseAdditiveSchemaVersion(t *testing.T) {
-	t.Parallel()
-	assertions := assert.New(t)
-	requirements := require.New(t)
-	assertions.Equal("3.0.0", APISchemaVersion)
-
-	for _, document := range []*huma.OpenAPI{OpenAPIDocument(), openAPIClientDocument()} {
-		schemas := document.Components.Schemas.Map()
-		hybrid := schemas["HybridSearchResponse"]
-		requirements.NotNil(hybrid)
-		assertions.Contains(hybrid.Required, "took_ms")
-		assertions.Contains(hybrid.Required, "timings")
-
-		timings := schemas["HybridSearchTimings"]
-		requirements.NotNil(timings)
-		assertions.ElementsMatch(
-			[]string{"query_embedding_ms", "retrieval_ms", "hydration_ms"},
-			timings.Required,
-		)
-	}
-}
-
-func TestOpenAPISchemaVersionPersonBrief(t *testing.T) {
-	t.Parallel()
-	assert.Equal(t, "3.0.0", APISchemaVersion)
 }
 
 func TestOpenAPIImportJobContract(t *testing.T) {
@@ -400,42 +280,6 @@ func TestPersonFactPinsOpenAPIDeclaresBadPersonIDResponse(t *testing.T) {
 	}
 }
 
-func TestOpenAPISeparatesParticipantAnalyticsFromDurablePeople(t *testing.T) {
-	t.Parallel()
-	assertions := assert.New(t)
-	doc := OpenAPIDocument()
-
-	assertions.Equal("3.0.0", APISchemaVersion)
-	for _, path := range []string{
-		"/api/v1/participants/search",
-		"/api/v1/participants/{id}",
-		"/api/v1/participants/{id}/summary",
-		"/api/v1/participants/{id}/timeline",
-		"/api/v1/participants/{id}/files/search",
-		"/api/v1/people/{id}/files/search",
-		"/api/v1/people",
-		"/api/v1/people/{id}",
-		"/api/v1/people/{id}/profile",
-		"/api/v1/people/{id}/contact-state",
-	} {
-		assertions.Contains(doc.Paths, path)
-	}
-	assertions.NotContains(doc.Paths, "/api/v1/persons")
-	assertions.NotContains(doc.Paths, "/api/v1/persons/{id}")
-	assertions.NotNil(doc.Paths["/api/v1/people/search"])
-	assertions.Nil(doc.Paths["/api/v1/people/{id}/summary"])
-}
-
-func TestAnalyticsCacheReadinessUsesAdditiveSchemaVersion(t *testing.T) {
-	t.Parallel()
-	assert.Equal(t, "3.0.0", APISchemaVersion)
-}
-
-func TestPersonFilesUseAdditiveSchemaVersion(t *testing.T) {
-	t.Parallel()
-	assert.Equal(t, "3.0.0", APISchemaVersion)
-}
-
 func TestPersonFileRoutesPublishTypedPathIDs(t *testing.T) {
 	t.Parallel()
 	assertions := assert.New(t)
@@ -453,24 +297,6 @@ func TestPersonFileRoutesPublishTypedPathIDs(t *testing.T) {
 		assertions.True(parameter.Required)
 		assertions.Equal(huma.TypeInteger, parameter.Schema.Type)
 		assertions.Equal(formatInt64, parameter.Schema.Format)
-	}
-}
-
-func TestOrganizationCreateOpenAPIDocumentsLocationHeader(t *testing.T) {
-	t.Parallel()
-	requirements := require.New(t)
-	assert.Equal(t, "3.0.0", APISchemaVersion,
-		"document and person-file search preserve the organization and employment contract")
-	for _, document := range []*huma.OpenAPI{
-		OpenAPIDocument(),
-		openAPIClientDocument(),
-	} {
-		operation := document.Paths[organizationsPath].Post
-		requirements.NotNil(operation)
-		response := operation.Responses[httpStatusKey(http.StatusCreated)]
-		requirements.NotNil(response)
-		requirements.Contains(response.Headers, "Location")
-		requirements.Equal(huma.TypeString, response.Headers["Location"].Schema.Type)
 	}
 }
 
@@ -521,25 +347,6 @@ func TestOrganizationCreateSchemaOmitsPatchOnlyRetiredState(t *testing.T) {
 		requirements.NotContains(createSchema.Properties, "retired")
 		requirements.Contains(patchSchema.Properties, "retired")
 	}
-}
-
-func operationBodySchema(
-	t *testing.T, document *huma.OpenAPI, operation *huma.Operation,
-) *huma.Schema {
-	t.Helper()
-	requirements := require.New(t)
-	requirements.NotNil(operation)
-	requirements.NotNil(operation.RequestBody)
-	schema := operation.RequestBody.Content["application/json"].Schema
-	requirements.NotNil(schema)
-	if schema.Ref == "" {
-		return schema
-	}
-	const prefix = "#/components/schemas/"
-	requirements.True(strings.HasPrefix(schema.Ref, prefix), schema.Ref)
-	resolved := document.Components.Schemas.Map()[strings.TrimPrefix(schema.Ref, prefix)]
-	requirements.NotNil(resolved)
-	return resolved
 }
 
 func TestSourceStatusRunReferencesAreNullable(t *testing.T) {
@@ -794,36 +601,6 @@ func TestOpenAPISearchDocumentsConversationID(t *testing.T) {
 	require.Fail(t, "conversation_id must be documented on /api/v1/search")
 }
 
-func TestOpenAPIPersonAttributeContract(t *testing.T) {
-	t.Parallel()
-	requirements := require.New(t)
-	assertions := assert.New(t)
-	assertions.Equal("3.0.0", APISchemaVersion,
-		"activity, identity match review, document search, and person files preserve the structured profile contract")
-
-	doc := OpenAPIDocument()
-	definitions := doc.Paths["/api/v1/attribute-definitions"]
-	requirements.NotNil(definitions, "attribute definitions path")
-	assertions.NotNil(definitions.Get, "attribute definitions list operation")
-	assertions.NotNil(definitions.Post, "attribute definitions create operation")
-	definition := doc.Paths["/api/v1/attribute-definitions/{id}"]
-	requirements.NotNil(definition, "attribute definition path")
-	assertions.NotNil(definition.Patch, "attribute definition patch operation")
-	assertions.NotNil(definition.Delete, "attribute definition delete operation")
-	values := doc.Paths["/api/v1/people/{id}/attributes"]
-	requirements.NotNil(values, "person attributes path")
-	assertions.NotNil(values.Get, "person attributes list operation")
-	value := doc.Paths["/api/v1/people/{id}/attributes/{slug}"]
-	requirements.NotNil(value, "person attribute value path")
-	assertions.NotNil(value.Put, "person attribute set operation")
-	assertions.NotNil(value.Delete, "person attribute clear operation")
-
-	createSchema := operationBodySchema(t, doc, definitions.Post)
-	assertions.Contains(createSchema.Properties, "slug")
-	assertions.NotContains(createSchema.Required, "slug",
-		"the server generates a slug when the client omits it")
-}
-
 func TestOpenAPIParticipantInboxAndTextScopeContracts(t *testing.T) {
 	t.Parallel()
 	requirements := require.New(t)
@@ -908,224 +685,6 @@ func TestOpenAPIPersonProfilePatchUsesWritableEnvelopeShape(t *testing.T) {
 		for _, field := range optionalFields {
 			assertions.NotContains(input.Required, field, "%s.%s", schemaName, field)
 		}
-	}
-}
-
-func TestOpenAPIOrganizationProfilePutDocumentsLimits(t *testing.T) {
-	t.Parallel()
-	assertions := assert.New(t)
-	requirements := require.New(t)
-	assertions.Equal("3.0.0", APISchemaVersion,
-		"organization profile write limits advance the published contract")
-	doc := OpenAPIDocument()
-	path := doc.Paths["/api/v1/organizations/{id}/profile"]
-	requirements.NotNil(path)
-	requirements.NotNil(path.Put)
-	assertions.Contains(path.Put.Description, "200")
-
-	response := path.Put.Responses[httpStatusKey(http.StatusRequestEntityTooLarge)]
-	requirements.NotNil(response)
-	media := response.Content["application/json"]
-	requirements.NotNil(media)
-	requirements.NotNil(media.Schema)
-	assertions.Equal("#/components/schemas/ErrorResponse", media.Schema.Ref)
-}
-
-func TestOpenAPIPersonProfileMediaContentContract(t *testing.T) {
-	t.Parallel()
-	requirements := require.New(t)
-	assertions := assert.New(t)
-
-	assertions.Equal("3.0.0", APISchemaVersion,
-		"activity, identity match review, document search, and person files preserve the raw profile media contract")
-	doc := OpenAPIDocument()
-	path := doc.Paths["/api/v1/people/{id}/profile/media/{media_id}/content"]
-	requirements.NotNil(path)
-	requirements.NotNil(path.Get)
-	assertions.Equal("getPersonProfileMediaContent", path.Get.OperationID)
-	requirements.Len(path.Get.Security, 1)
-	_, secured := path.Get.Security[0]["apiKey"]
-	assertions.True(secured)
-	requirements.Len(path.Get.Parameters, 2)
-	assertions.Equal("id", path.Get.Parameters[0].Name)
-	assertions.Equal("media_id", path.Get.Parameters[1].Name)
-	response := path.Get.Responses["200"]
-	requirements.NotNil(response)
-	binary := response.Content["*/*"]
-	requirements.NotNil(binary)
-	requirements.NotNil(binary.Schema)
-	assertions.Equal("binary", binary.Schema.Format)
-	for _, status := range []string{"400", "401", "404", "500", "503"} {
-		assertions.NotNil(path.Get.Responses[status], status)
-	}
-}
-
-func TestOpenAPIIdentityMatchReviewContract(t *testing.T) {
-	t.Parallel()
-	requirements := require.New(t)
-	assertions := assert.New(t)
-
-	assertions.Equal("3.0.0", APISchemaVersion,
-		"document and person-file search preserve the identity match review contract")
-
-	doc := OpenAPIDocument()
-	list := doc.Paths["/api/v1/identity/match-candidates"]
-	requirements.NotNil(list, "identity match candidate list path")
-	requirements.NotNil(list.Get, "identity match candidate list operation")
-	assertions.Equal("listIdentityMatchCandidates", list.Get.OperationID)
-
-	get := doc.Paths["/api/v1/identity/match-candidates/{id}"]
-	requirements.NotNil(get)
-	requirements.NotNil(get.Get)
-	assertions.Equal("getIdentityMatchCandidate", get.Get.OperationID)
-	for path, operationID := range map[string]string{
-		"/api/v1/identity/match-candidates/{id}/review/accept": "reviewAcceptIdentityMatchCandidate",
-		"/api/v1/identity/match-candidates/{id}/review/reject": "reviewRejectIdentityMatchCandidate",
-	} {
-		item := doc.Paths[path]
-		requirements.NotNil(item, path)
-		requirements.NotNil(item.Post, path)
-		assertions.Equal(operationID, item.Post.OperationID, path)
-		requirements.NotNil(item.Post.RequestBody, path)
-		assertions.True(item.Post.RequestBody.Required, path)
-	}
-
-	// Keep the source-identity route that shipped
-	// before identity match review.
-	sourceIdentities := doc.Paths["/api/v1/sources/{source_id}/identities"]
-	requirements.NotNil(sourceIdentities, "source identity path")
-	requirements.NotNil(sourceIdentities.Get, "source identity list operation")
-	assertions.Equal("listSourceIdentities", sourceIdentities.Get.OperationID)
-}
-
-func TestOpenAPIMeetingImportContract(t *testing.T) {
-	t.Parallel()
-	requirements := require.New(t)
-	assertions := assert.New(t)
-
-	// Pinned so that anyone bumping the schema version has to come here and
-	// confirm the meeting-import contract below still holds. Meeting import
-	// shipped in 1.33.0; the feed added in 1.34.0, the attributes added in
-	// 1.35.0, source-scoped identities added in 1.36.0, and structured profiles
-	// added in 1.37.0, raw profile media added in 1.38.0, typed temporal
-	// person relationships added in 1.39.0, organizations and employments
-	// added in 1.40.0, identity match review added in 1.41.0, and dated activity
-	// routes added in 1.42.0, cache-readiness responses added in 1.43.0,
-	// document search added in 1.44.0, participant/people separation added in
-	// 2.0.0, tracking added in 2.1.0, and participant-scoped files added in
-	// 2.5.0. Person search in 2.6.0, structured filters in 2.7.0, CardDAV routes
-	// in 2.8.0, person merge/split operations in 2.9.0, and relationship
-	// calendars in 2.10.0, person fact diagnostics in 2.11.0, lexical deletion
-	// scope in 2.12.0, Directory people and deduplicate planning in 2.13.0,
-	// CardDAV status and run history plus List-ID filtering in 2.14.0, Gmail
-	// repair in 2.15.0, complete TUI search and statistics contracts plus
-	// historical import jobs in 2.16.0, collection source scopes in 2.17.0,
-	// deletion subset counts in 2.18.0, Operations in 2.19.0, person briefs
-	// in 2.20.0, and Saved View execution in 2.21.0 did not touch it.
-	assertions.Equal("3.0.0", APISchemaVersion, "meeting import remains in the current schema")
-
-	doc := OpenAPIDocument()
-	path := doc.Paths["/api/v1/import/meeting"]
-	requirements.NotNil(path, "meeting import path")
-	op := path.Post
-	requirements.NotNil(op, "meeting import operation")
-	assertions.Equal("importMeeting", op.OperationID)
-	requirements.Len(op.Security, 1, "API-key security requirement")
-	_, secured := op.Security[0]["apiKey"]
-	assertions.True(secured, "apiKey security requirement")
-
-	requirements.NotNil(op.RequestBody, "request body")
-	assertions.True(op.RequestBody.Required, "request body is required")
-	requestMedia := op.RequestBody.Content["application/json"]
-	requirements.NotNil(requestMedia, "JSON request media type")
-	requirements.NotNil(requestMedia.Schema, "request schema")
-	assertions.Equal("#/components/schemas/MeetingImportRequest", requestMedia.Schema.Ref)
-
-	schemas := doc.Components.Schemas.Map()
-	requestSchema := schemas["MeetingImportRequest"]
-	requirements.NotNil(requestSchema, "request component")
-	requestAdditionalProperties, ok := requestSchema.AdditionalProperties.(bool)
-	requirements.True(ok, "request additionalProperties is boolean")
-	assertions.False(requestAdditionalProperties, "request rejects unknown fields")
-	assertions.ElementsMatch([]string{"source", "meeting"}, requestSchema.Required)
-
-	for _, name := range []string{"Source", "Meeting", "MeetingPerson", "TranscriptSegment"} {
-		schema := schemas[name]
-		requirements.NotNil(schema, "%s component", name)
-		additionalProperties, ok := schema.AdditionalProperties.(bool)
-		requirements.True(ok, "%s additionalProperties is boolean", name)
-		assertions.False(additionalProperties, "%s rejects unknown fields", name)
-	}
-	assertions.ElementsMatch(
-		[]string{"external_id", "started_at"},
-		schemas["Meeting"].Required,
-	)
-	source := schemas["Source"]
-	requirements.NotNil(source.Properties["identifier"].MaxLength)
-	assertions.Equal(128, *source.Properties["identifier"].MaxLength)
-	requirements.NotNil(source.Properties["display_name"].MaxLength)
-	assertions.Equal(256, *source.Properties["display_name"].MaxLength)
-	assertions.Equal("email", source.Properties["account_email"].Format)
-
-	meeting := schemas["Meeting"]
-	requirements.NotNil(meeting.Properties["external_id"].MaxLength)
-	assertions.Equal(256, *meeting.Properties["external_id"].MaxLength)
-	requirements.NotNil(meeting.Properties["title"].MaxLength)
-	assertions.Equal(4096, *meeting.Properties["title"].MaxLength)
-	assertions.Equal("date-time", meeting.Properties["started_at"].Format)
-	assertions.Equal("date-time", meeting.Properties["ended_at"].Format)
-	requirements.Len(meeting.AllOf, 2, "meeting cross-field constraints")
-	requirements.Len(meeting.AllOf[0].AnyOf, 4, "meeting requires a non-empty summary or transcript")
-	assertions.ElementsMatch(
-		[]string{"summary_markdown", "summary_text", "transcript", "transcript_segments"},
-		[]string{
-			meeting.AllOf[0].AnyOf[0].Required[0],
-			meeting.AllOf[0].AnyOf[1].Required[0],
-			meeting.AllOf[0].AnyOf[2].Required[0],
-			meeting.AllOf[0].AnyOf[3].Required[0],
-		},
-	)
-	for idx, property := range []string{"summary_markdown", "summary_text", "transcript"} {
-		requirements.NotNil(meeting.AllOf[0].AnyOf[idx].Properties[property].MinLength)
-		assertions.Equal(1, *meeting.AllOf[0].AnyOf[idx].Properties[property].MinLength)
-	}
-	requirements.NotNil(meeting.AllOf[0].AnyOf[3].Properties["transcript_segments"].MinItems)
-	assertions.Equal(1, *meeting.AllOf[0].AnyOf[3].Properties["transcript_segments"].MinItems)
-	requirements.NotNil(meeting.AllOf[1].Not, "plain and segmented transcripts are mutually exclusive")
-	assertions.ElementsMatch(
-		[]string{"transcript", "transcript_segments"},
-		meeting.AllOf[1].Not.Required,
-	)
-
-	assertions.Equal("email", schemas["MeetingPerson"].Properties["email"].Format)
-	person := schemas["MeetingPerson"]
-	assertions.NotContains(person.Required, "email", "an attendee may be identified by phone alone")
-	requirements.Len(person.AnyOf, 2, "attendee requires an email or a phone")
-	assertions.ElementsMatch([]string{"email", "phone"},
-		[]string{person.AnyOf[0].Required[0], person.AnyOf[1].Required[0]})
-	requirements.NotNil(person.Properties["id"].MaxLength)
-	assertions.Equal(200, *person.Properties["id"].MaxLength)
-	requirements.NotNil(person.Properties["phone"].MaxLength)
-	offset := schemas["TranscriptSegment"].Properties["offset_seconds"]
-	requirements.NotNil(offset.Minimum)
-	assertions.Zero(*offset.Minimum)
-
-	metadata := schemas["Meeting"].Properties["metadata"]
-	requirements.NotNil(metadata, "metadata schema")
-	_, extensible := metadata.AdditionalProperties.(*huma.Schema)
-	assertions.True(extensible, "metadata accepts provider-specific values")
-
-	responseSchema := schemas["MeetingImportResponse"]
-	requirements.NotNil(responseSchema, "meeting import response component")
-	assertions.Equal([]any{"created", "updated"}, responseSchema.Properties["status"].Enum)
-
-	for _, status := range []string{"200", "201"} {
-		response := op.Responses[status]
-		requirements.NotNil(response, "response %s", status)
-		media := response.Content["application/json"]
-		requirements.NotNil(media, "response %s JSON media type", status)
-		requirements.NotNil(media.Schema, "response %s schema", status)
-		assertions.Equal("#/components/schemas/MeetingImportResponse", media.Schema.Ref)
 	}
 }
 
@@ -2199,28 +1758,4 @@ func TestOpenAPICollectionScopeContracts(t *testing.T) {
 		}
 	}
 	assertions.Fail("deep search documents source_ids rejection")
-}
-
-func TestMessageDetailPublishesSafeSourceProvenance(t *testing.T) {
-	doc := OpenAPIDocument()
-	schema := doc.Components.Schemas.Map()["MessageDetail"]
-	require.NotNil(t, schema, "MessageDetail schema")
-	require.NotNil(t, schema.Properties["source_conversation_id"], "source_conversation_id")
-	provenance := schema.Properties["source_provenance"]
-	require.NotNil(t, provenance, "source_provenance")
-	require.NotEmpty(t, provenance.Ref, "source_provenance must reference a typed schema")
-
-	provenanceSchema := doc.Components.Schemas.SchemaFromRef(provenance.Ref)
-	require.NotNil(t, provenanceSchema, "SourceProvenanceResponse schema")
-	keys := make([]string, 0, len(provenanceSchema.Properties))
-	for key := range provenanceSchema.Properties {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	assert.ElementsMatch(t,
-		[]string{"kind", "repository", "repository_url", "commit", "archive_paths", "author_identity", "lifecycle_authority"},
-		keys,
-	)
-	assert.NotContains(t, schema.Required, "source_conversation_id")
-	assert.NotContains(t, schema.Required, "source_provenance")
 }

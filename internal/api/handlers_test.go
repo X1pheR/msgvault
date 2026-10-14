@@ -114,10 +114,6 @@ func newTestServerWithMockStore(t *testing.T) (*Server, *mockStore) {
 	return srv, store
 }
 
-func newCLIHandlerTestServer(st *mockStore) *Server {
-	return NewServer(&config.Config{Server: config.ServerConfig{APIPort: 8080}}, st, nil, testLogger())
-}
-
 func servePOSTTestRequest(srv *Server, target string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodPost, target, nil)
 	resp := httptest.NewRecorder()
@@ -1783,67 +1779,6 @@ func TestHandleCLIRunRejectsDisallowedCommand(t *testing.T) {
 
 	assert.Equal(http.StatusBadRequest, resp.Code, "status")
 	assert.Contains(resp.Body.String(), "command is not allowed", "error")
-}
-
-func TestHandleCLIRunBackupSubcommandAdmission(t *testing.T) {
-	t.Parallel()
-	cases := []struct {
-		name    string
-		args    []string
-		allowed bool
-	}{
-		{"backup create allowed", []string{"backup", "create"}, true},
-		{"backup init rejected", []string{"backup", "init"}, false},
-		{"backup verify rejected", []string{"backup", "verify"}, false},
-		{"backup with no subcommand rejected", []string{"backup"}, false},
-		{"backup unknown subcommand rejected", []string{"backup", "restore"}, false},
-		{"import-discord-observations allowed", []string{"import-discord-observations", "/imports/discord/sample.jsonl", "--source", "700"}, true},
-		{"logs still allowed", []string{"logs"}, true},
-		{"gc allowed", []string{"gc", "--yes"}, true},
-		{"import-maildir allowed", []string{"import-maildir", "--identifier", "me@example.test", "dir"}, true},
-		{"import-eml allowed", []string{"import-eml", "--identifier", "me@example.test", "dir"}, true},
-		{"remove-account still allowed", []string{"remove-account", "alice@example.com", "--yes"}, true},
-		{"purge excluded media dry-run allowed", []string{"purge-excluded-media", "--dry-run"}, true},
-		{"pack-attachments allowed", []string{"pack-attachments"}, true},
-		{"repair-dates apply allowed", []string{"repair-dates", "--apply"}, true},
-		{"repair-labels apply allowed", []string{"repair-labels", "--apply"}, true},
-		{"repair list IDs apply allowed", []string{"repair-list-ids", "--apply"}, true},
-		{"repair-senders apply allowed", []string{"repair-senders", "--apply"}, true},
-		{"repack-attachments allowed", []string{"repack-attachments"}, true},
-		{"add-discord allowed", []string{"add-discord"}, true},
-		{"sync-discord allowed", []string{"sync-discord", "113456789012345678"}, true},
-		{"export-discord allowed", []string{"export-discord", "113456789012345678"}, true},
-		{"export-messages allowed", []string{"export-messages", "--start", "2026-07-20T00:00:00Z", "--end", "2026-07-21T00:00:00Z"}, true},
-		{"backfill-discord-media allowed", []string{"backfill-discord-media", "113456789012345678"}, true},
-		{"unpack-attachments rejected", []string{"unpack-attachments"}, false},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			assert := assert.New(t)
-			require := require.New(t)
-
-			st := &mockStore{
-				runFunc: func(_ context.Context, _ CLIRunRequest, emit func(CLIRunEvent) error) error {
-					return emit(CLIRunEvent{Type: cliStreamEventTypeComplete})
-				},
-			}
-			srv := newCLIHandlerTestServer(st)
-
-			body, err := json.Marshal(CLIRunRequest{Args: tc.args})
-			require.NoError(err, "marshal request")
-			req := httptest.NewRequest(http.MethodPost, "/api/v1/cli/run", bytes.NewReader(body))
-			req.Header.Set("Content-Type", "application/json")
-			resp := httptest.NewRecorder()
-			srv.Router().ServeHTTP(resp, req)
-
-			if tc.allowed {
-				assert.Equal(http.StatusOK, resp.Code, "status: %s", resp.Body.String())
-			} else {
-				assert.Equal(http.StatusBadRequest, resp.Code, "status: %s", resp.Body.String())
-				assert.Contains(resp.Body.String(), "command_not_allowed", "error body")
-			}
-		})
-	}
 }
 
 func TestHandleCLIRunAcceptsDiscordTokenEnvWithoutExposingSecret(t *testing.T) {

@@ -15,7 +15,11 @@ func newDiscordLocalHistoryCmd() *cobra.Command {
 		Short: "Read locally observed Discord message versions",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			st, err := store.OpenReadOnly(cfg.DatabaseDSN())
+			state := invocationFromCommand(cmd)
+			if state == nil || state.cfg == nil {
+				return fmt.Errorf("configuration is unavailable")
+			}
+			st, err := store.OpenReadOnly(state.cfg.DatabaseDSN())
 			if err != nil {
 				return fmt.Errorf("open local archive: %w", err)
 			}
