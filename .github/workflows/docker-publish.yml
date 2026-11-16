@@ -2,7 +2,7 @@ name: Docker publish
 
 on:
   push:
-    branches: [main]
+    branches: [maintained]
     tags:
       - 'v*'
 
@@ -14,6 +14,8 @@ env:
 
 jobs:
   publish:
+    # Explicit publication approval is required before taking over the legacy GHCR package.
+    if: ${{ vars.MSGVAULT_GHCR_PUBLISH_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
