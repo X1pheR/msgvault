@@ -3334,9 +3334,11 @@ export interface components {
             /** Format: int64 */
             size_bytes: number;
             snippet: string;
+            source_conversation_id?: string;
             /** Format: int64 */
             source_id?: number;
             source_message_id?: string;
+            source_provenance?: components["schemas"]["SourceProvenanceResponse"];
             subject: string;
             to: string[] | null;
         } & {
@@ -3913,6 +3915,17 @@ export interface components {
             confirmed_at: string;
             identifier: string;
             signals: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        SourceProvenanceResponse: {
+            archive_paths?: string[] | null;
+            author_identity?: string;
+            commit?: string;
+            kind?: string;
+            lifecycle_authority?: string;
+            repository?: string;
+            repository_url?: string;
         } & {
             [key: string]: unknown;
         };
