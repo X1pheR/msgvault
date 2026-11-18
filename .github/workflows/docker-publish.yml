@@ -14,9 +14,10 @@ env:
 
 jobs:
   publish:
-    # Deliberately hard-disabled until package ACL and release cutover are accepted.
-    # Re-enable only through a separately reviewed source change, not a repository variable.
-    if: ${{ false }}
+    # Intentionally disabled: this workflow triggers on push only, while this
+    # condition requires workflow_dispatch. Re-enable only by reviewing the
+    # workflow event triggers alongside GHCR package authorization.
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
