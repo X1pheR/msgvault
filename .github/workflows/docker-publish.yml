@@ -14,8 +14,9 @@ env:
 
 jobs:
   publish:
-    # Explicit publication approval is required before taking over the legacy GHCR package.
-    if: ${{ vars.MSGVAULT_GHCR_PUBLISH_ENABLED == 'true' }}
+    # Deliberately hard-disabled until package ACL and release cutover are accepted.
+    # Re-enable only through a separately reviewed source change, not a repository variable.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
